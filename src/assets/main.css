@@ -1,0 +1,124 @@
+:root {
+  --ink: #17191c;
+  --muted: #676c73;
+  --accent: #2563a8;
+  --line: #d9dce0;
+  --line-strong: #aeb3b9;
+  --surface: #ffffff;
+  --soft: #f4f5f6;
+  font-family: Pretendard, 'Noto Sans KR', 'Apple SD Gothic Neo', Arial, sans-serif;
+  color: var(--ink);
+  background: #fbfbfa;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: #fbfbfa;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button,
+select {
+  cursor: pointer;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+[tabindex='-1']:focus-visible {
+  outline: 3px solid rgba(37, 99, 168, 0.25);
+  outline-offset: 2px;
+}
+
+.practice-card {
+  padding: 18px;
+  border: 1px solid var(--line-strong);
+  background: #fff;
+}
+
+.practice-card h2,
+.practice-card h3 {
+  margin-top: 0;
+}
+
+.practice-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 12px;
+}
+
+.control-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  align-items: center;
+}
+
+.control-row + .control-row {
+  margin-top: 0.75rem;
+}
+
+.practice-card input,
+.practice-card select,
+.practice-card textarea {
+  max-width: 100%;
+  padding: 8px 10px;
+  border: 1px solid var(--line-strong);
+}
+
+.practice-card button {
+  padding: 8px 12px;
+  border: 1px solid var(--line-strong);
+}
+
+.practice-card button.secondary {
+  border-style: dashed;
+}
+
+.result {
+  margin-top: 0.8rem;
+  padding: 10px;
+  border: 1px solid var(--line-strong);
+}
+
+code {
+  font-family: 'SFMono-Regular', Consolas, monospace;
+}
+
+@media (max-width: 640px) {
+  .practice-card {
+    padding: 1rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+  }
+}
