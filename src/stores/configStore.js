@@ -21,6 +21,7 @@ export const useConfigStore = defineStore('config', () => {
   const unit = ref(initial.unit ?? 'celsius')
   const favoriteCityIds = ref(initial.favoriteCityIds ?? [])
   const weatherEffectsEnabled = ref(initial.weatherEffectsEnabled ?? true)
+  const mapWeatherMotionEnabled = ref(initial.mapWeatherMotionEnabled ?? true)
   const weatherEffect = ref(emptyWeatherEffect())
   const lastViewedCityId = ref('')
   const planner = ref({
@@ -39,6 +40,10 @@ export const useConfigStore = defineStore('config', () => {
 
   function toggleWeatherEffects() {
     weatherEffectsEnabled.value = !weatherEffectsEnabled.value
+  }
+
+  function toggleMapWeatherMotion() {
+    mapWeatherMotionEnabled.value = !mapWeatherMotionEnabled.value
   }
 
   function setWeatherEffect(cityName, weather) {
@@ -68,7 +73,7 @@ export const useConfigStore = defineStore('config', () => {
   }
 
   watch(
-    [unit, favoriteCityIds, planner, weatherEffectsEnabled],
+    [unit, favoriteCityIds, planner, weatherEffectsEnabled, mapWeatherMotionEnabled],
     () => {
       if (typeof localStorage === 'undefined') return
       localStorage.setItem(
@@ -78,6 +83,7 @@ export const useConfigStore = defineStore('config', () => {
           favoriteCityIds: favoriteCityIds.value,
           planner: planner.value,
           weatherEffectsEnabled: weatherEffectsEnabled.value,
+          mapWeatherMotionEnabled: mapWeatherMotionEnabled.value,
         }),
       )
     },
@@ -91,11 +97,13 @@ export const useConfigStore = defineStore('config', () => {
     unitSymbol,
     favoriteCityCount,
     weatherEffectsEnabled,
+    mapWeatherMotionEnabled,
     weatherEffect,
     hasWeatherEffect,
     planner,
     toggleUnit,
     toggleWeatherEffects,
+    toggleMapWeatherMotion,
     setWeatherEffect,
     clearWeatherEffect,
     isFavorite,

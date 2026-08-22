@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 
 import { findActivity } from '../../data/activities'
+import { getWeatherMatchedSpots } from '../../data/tourismRegions'
 import { useConfigStore } from '../../stores/configStore'
 import { formatTemperature } from '../../utils/temperature'
 import { getScoreLabel } from '../../utils/weatherScore'
@@ -46,6 +47,9 @@ const temperatureText = computed(() =>
     configStore.unitSymbol,
   ),
 )
+const matchedSpots = computed(() =>
+  getWeatherMatchedSpots(props.recommendation.city, props.recommendation.weather),
+)
 </script>
 
 <template>
@@ -62,8 +66,19 @@ const temperatureText = computed(() =>
         <li v-for="reason in recommendation.reasons" :key="reason">{{ reason }}</li>
       </ul>
 
+      <section class="spot-suggestions" aria-labelledby="spot-suggestions-title">
+        <p id="spot-suggestions-title">이 날씨에 가볼 곳</p>
+        <ul>
+          <li v-for="spot in matchedSpots" :key="spot.name">
+            <span>{{ spot.label }}</span>
+            <strong>{{ spot.name }}</strong>
+            <small>{{ spot.reason }}</small>
+          </li>
+        </ul>
+      </section>
+
       <button class="text-action" type="button" @click="$emit('open-detail')">
-        {{ recommendation.city.place }} 날씨 자세히 보기 →
+        {{ recommendation.city.name }} 날씨 자세히 보기 →
       </button>
     </div>
 
@@ -170,6 +185,44 @@ h2 {
   font-weight: 700;
 }
 
+.spot-suggestions {
+  margin: 0 0 24px;
+}
+
+.spot-suggestions > p {
+  margin: 0 0 10px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.spot-suggestions ul {
+  display: grid;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.spot-suggestions li {
+  display: grid;
+  grid-template-columns: 42px minmax(120px, 0.72fr) 1fr;
+  align-items: baseline;
+  gap: 10px;
+  padding: 10px 0;
+  border-top: 1px solid var(--line);
+}
+
+.spot-suggestions li > span {
+  color: var(--accent);
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.spot-suggestions li > small {
+  color: var(--muted);
+  font-size: 12px;
+}
+
 .score {
   display: flex;
   align-items: baseline;
@@ -228,6 +281,14 @@ dd {
   .score-panel {
     border-top: 1px solid var(--line);
     border-left: 0;
+  }
+
+  .spot-suggestions li {
+    grid-template-columns: 42px 1fr;
+  }
+
+  .spot-suggestions li > small {
+    grid-column: 2;
   }
 }
 </style>

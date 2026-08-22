@@ -3,6 +3,7 @@ import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import { weatherCities } from '../data/weatherCities'
+import { getWeatherMatchedSpots } from '../data/tourismRegions'
 import { requestSunTimes, requestWeatherBundle } from '../services/weatherApi'
 import { useConfigStore } from '../stores/configStore'
 import { formatTemperature } from '../utils/temperature'
@@ -22,6 +23,9 @@ const upcoming = computed(() => {
   const now = Date.now()
   return bundle.value.forecast.filter((item) => new Date(item.time).getTime() >= now).slice(0, 8)
 })
+const matchedSpots = computed(() =>
+  city.value && bundle.value ? getWeatherMatchedSpots(city.value, bundle.value.current) : [],
+)
 
 function displayTemperature(value) {
   return formatTemperature(value, configStore.unit, configStore.unitSymbol)
@@ -146,10 +150,15 @@ onMounted(loadDetail)
       </section>
 
       <section class="local-note">
-        <p>이 지역에서 할 일</p>
+        <p>이 날씨에 가볼 곳</p>
         <div>
-          <h2>{{ city.place }}</h2>
-          <span>{{ city.activityNote }}</span>
+          <ul>
+            <li v-for="spot in matchedSpots" :key="spot.name">
+              <span>{{ spot.label }}</span>
+              <strong>{{ spot.name }}</strong>
+              <small>{{ spot.reason }}</small>
+            </li>
+          </ul>
         </div>
         <button type="button" @click="planFromCity">이 도시로 다시 계획하기 →</button>
       </section>
@@ -312,18 +321,31 @@ onMounted(loadDetail)
   background: var(--surface);
 }
 .local-note p,
-.local-note h2 {
-  margin: 0;
-}
 .local-note p {
   color: var(--accent);
   font-size: 12px;
   font-weight: 800;
 }
-.local-note h2 {
-  margin-bottom: 5px;
+.local-note ul {
+  display: grid;
+  padding: 0;
+  margin: 0;
+  list-style: none;
 }
-.local-note span {
+.local-note li {
+  display: grid;
+  grid-template-columns: 42px minmax(140px, 0.7fr) 1fr;
+  align-items: baseline;
+  gap: 10px;
+  padding: 9px 0;
+  border-top: 1px solid var(--line);
+}
+.local-note li > span {
+  color: var(--accent);
+  font-size: 11px;
+  font-weight: 800;
+}
+.local-note li > small {
   color: var(--muted);
 }
 .local-note button {
@@ -356,6 +378,18 @@ onMounted(loadDetail)
     align-items: flex-start;
     flex-direction: column;
     display: flex;
+  }
+  .local-note {
+    width: 100%;
+  }
+  .local-note > div {
+    width: 100%;
+  }
+  .local-note li {
+    grid-template-columns: 42px 1fr;
+  }
+  .local-note li > small {
+    grid-column: 2;
   }
 }
 </style>

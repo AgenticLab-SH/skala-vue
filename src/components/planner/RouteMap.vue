@@ -3,6 +3,8 @@ import maplibregl from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
+import { useConfigStore } from '../../stores/configStore'
+
 const props = defineProps({
   origin: { type: Object, required: true },
   destination: { type: Object, required: true },
@@ -13,6 +15,7 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['mode-change', 'retry-weather-grid'])
+const configStore = useConfigStore()
 const mapContainer = ref(null)
 const mapStatus = ref('loading')
 const mapError = ref('')
@@ -21,6 +24,7 @@ const isThreeDimensional = ref(false)
 let map
 let loadTimer
 let weatherPopup
+let weatherMotionMarkers = []
 
 const coordinates = computed(() => {
   if (props.route.geometry?.length >= 2) return props.route.geometry
@@ -86,7 +90,7 @@ const visibleWeatherRegions = computed(() => {
 
 const routeSummary = computed(
   () =>
-    `${props.origin.name}에서 ${props.destination.name}까지 ${props.route.distance}km, 약 ${props.route.minutes}분입니다. ${props.route.source}를 사용했습니다.`,
+    `${props.origin.name}에서 ${props.destination.name}까지 ${props.route.distance}km, 약 ${props.route.minutes}분입니다. 경로 출처는 ${props.route.source}입니다.`,
 )
 
 const mapTitle = computed(() => {
@@ -162,6 +166,7 @@ function applyMapMode() {
     setLayerVisibility(layerId, weatherVisible)
     if (map.getLayer(layerId)) map.setFilter(layerId, weatherFilter())
   })
+  syncWeatherMotionMarkers()
 }
 
 function addRouteLayers() {
@@ -275,6 +280,78 @@ function addWeatherLayers() {
       'text-halo-color': 'rgba(255,255,255,0.94)',
       'text-halo-width': 1.6,
     },
+  })
+}
+
+function createWeatherMotionElement(point) {
+  const element = document.createElement('div')
+  element.className = 'weather-motion-cell'
+  element.setAttribute('aria-hidden', 'true')
+
+  const cloudLayer = document.createElement('span')
+  cloudLayer.className = 'weather-motion-clouds'
+  for (let index = 0; index < 3; index += 1) {
+    const cloud = document.createElement('i')
+    cloud.style.setProperty('--cloud-top', `${20 + index * 9}px`)
+    cloud.style.setProperty('--cloud-left', `${-5 + index * 22}px`)
+    cloud.style.setProperty('--cloud-delay', `${index * -1.7}s`)
+    cloudLayer.append(cloud)
+  }
+
+  const rainLayer = document.createElement('span')
+  rainLayer.className = 'weather-motion-rain'
+  for (let index = 0; index < 14; index += 1) {
+    const drop = document.createElement('i')
+    drop.style.setProperty('--rain-x', `${(index * 29 + point.id.length * 7) % 100}%`)
+    drop.style.setProperty('--rain-delay', `${-((index * 17) % 24) / 10}s`)
+    drop.style.setProperty('--rain-duration', `${0.72 + (index % 5) * 0.09}s`)
+    drop.style.setProperty('--rain-length', `${14 + (index % 4) * 5}px`)
+    rainLayer.append(drop)
+  }
+
+  element.append(cloudLayer, rainLayer)
+  return element
+}
+
+function clearWeatherMotionMarkers() {
+  weatherMotionMarkers.forEach(({ marker }) => marker.remove())
+  weatherMotionMarkers = []
+}
+
+function rebuildWeatherMotionMarkers() {
+  clearWeatherMotionMarkers()
+  if (!map || mapStatus.value !== 'ready') return
+
+  weatherMotionMarkers = props.weatherGrid
+    .filter((point) => point.isRaining || point.isCloudy)
+    .map((point) => {
+      const element = createWeatherMotionElement(point)
+      const marker = new maplibregl.Marker({ element, anchor: 'center' })
+        .setLngLat([point.longitude, point.latitude])
+        .addTo(map)
+      // 장식용 marker는 지도 조작 대상이 아니므로 빈 키보드 버튼으로 노출하지 않습니다.
+      element.removeAttribute('role')
+      element.removeAttribute('tabindex')
+      return { marker, element, point }
+    })
+  syncWeatherMotionMarkers()
+}
+
+function syncWeatherMotionMarkers() {
+  const enabled = configStore.mapWeatherMotionEnabled && mapMode.value !== 'route'
+  weatherMotionMarkers.forEach(({ element, point }) => {
+    const visible =
+      enabled &&
+      (mapMode.value === 'weather' ||
+        (mapMode.value === 'rain' && point.isRaining) ||
+        (mapMode.value === 'cloud' && point.isCloudy))
+    const effectKind =
+      mapMode.value === 'rain' || (mapMode.value === 'weather' && point.isRaining)
+        ? 'rain'
+        : 'cloud'
+    element.classList.toggle('is-visible', visible)
+    element.classList.toggle('weather-motion-cell--rain', visible && effectKind === 'rain')
+    element.classList.toggle('weather-motion-cell--cloud', visible && effectKind === 'cloud')
   })
 }
 
@@ -400,7 +477,13 @@ function createWeatherPopupContent(point) {
   title.textContent = `${point.name} · ${point.condition}`
   const details = document.createElement('span')
   details.textContent = `${Math.round(point.temperature)}℃ · 강수 ${point.rainAmount}mm · 운량 ${point.cloudCover}%`
-  container.append(title, details)
+  const spots = document.createElement('span')
+  spots.className = 'weather-map-popup-spots'
+  spots.textContent = `가볼 곳 · ${(point.spots ?? [])
+    .slice(0, 2)
+    .map((spot) => spot.name)
+    .join(', ')}`
+  container.append(title, details, spots)
   return container
 }
 
@@ -463,6 +546,7 @@ onMounted(async () => {
         addBuildingLayer()
         window.clearTimeout(loadTimer)
         mapStatus.value = 'ready'
+        rebuildWeatherMotionMarkers()
         showWholeRoute()
       } catch {
         window.clearTimeout(loadTimer)
@@ -488,11 +572,16 @@ onMounted(async () => {
 })
 
 watch([coordinates, pointGeoJson], updateMapData)
-watch(weatherGeoJson, updateWeatherData)
+watch(weatherGeoJson, () => {
+  updateWeatherData()
+  rebuildWeatherMotionMarkers()
+})
+watch(() => configStore.mapWeatherMotionEnabled, syncWeatherMotionMarkers)
 
 onBeforeUnmount(() => {
   window.clearTimeout(loadTimer)
   weatherPopup?.remove()
+  clearWeatherMotionMarkers()
   map?.remove()
 })
 </script>
@@ -556,6 +645,17 @@ onBeforeUnmount(() => {
 
     <div class="map-frame">
       <div ref="mapContainer" class="map-canvas" role="region" :aria-label="mapAriaLabel"></div>
+      <button
+        v-if="mapStatus === 'ready' && mapMode !== 'route'"
+        class="map-motion-toggle"
+        type="button"
+        :aria-pressed="configStore.mapWeatherMotionEnabled"
+        :aria-label="`지도 날씨 모션 ${configStore.mapWeatherMotionEnabled ? '끄기' : '켜기'}`"
+        @click="configStore.toggleMapWeatherMotion"
+      >
+        <span class="motion-switch" aria-hidden="true"><i></i></span>
+        날씨 모션 {{ configStore.mapWeatherMotionEnabled ? '켬' : '끔' }}
+      </button>
       <div v-if="mapStatus === 'loading'" class="map-state" role="status">
         지도를 불러오고 있습니다.
       </div>
@@ -576,9 +676,7 @@ onBeforeUnmount(() => {
         <span><i class="legend-clear"></i>맑음</span>
       </div>
       <p class="map-caption">
-        <template v-if="mapMode === 'route'">
-          3D 건물은 경로를 이해하기 위한 지도 정보이며, 그늘을 계산한 결과는 아닙니다.
-        </template>
+        <template v-if="mapMode === 'route'"> 3D 건물과 이동선을 함께 확인합니다. </template>
         <template v-else>
           Open-Meteo 현재 모델값을 지점별로 표시하며 기상 레이더 경계는 아닙니다.
           {{ weatherUpdatedAt ? `${weatherUpdatedAt} 기준` : '' }}
@@ -601,6 +699,14 @@ onBeforeUnmount(() => {
           <span>
             <strong>{{ point.name }}</strong>
             <small>{{ point.condition }}</small>
+            <small class="weather-spots">
+              {{
+                point.spots
+                  ?.slice(0, 2)
+                  .map((spot) => spot.name)
+                  .join(' · ')
+              }}
+            </small>
           </span>
           <span class="weather-values">
             {{ Math.round(point.temperature) }}℃ · 강수 {{ point.rainAmount }}mm · 운량
@@ -753,6 +859,59 @@ onBeforeUnmount(() => {
   inset: 0;
 }
 
+.map-motion-toggle {
+  position: absolute;
+  z-index: 4;
+  top: 12px;
+  right: 12px;
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  gap: 9px;
+  padding: 0 13px 0 10px;
+  border: 1px solid rgba(255, 255, 255, 0.84);
+  border-radius: 14px;
+  background: rgba(247, 250, 253, 0.86);
+  box-shadow:
+    0 10px 28px rgba(20, 34, 49, 0.16),
+    inset 0 1px rgba(255, 255, 255, 0.94);
+  color: #273441;
+  font-size: 12px;
+  font-weight: 800;
+  backdrop-filter: blur(20px) saturate(155%);
+  -webkit-backdrop-filter: blur(20px) saturate(155%);
+}
+
+.motion-switch {
+  position: relative;
+  width: 30px;
+  height: 18px;
+  border-radius: 999px;
+  background: #9aa5af;
+  box-shadow: inset 0 1px 3px rgba(20, 34, 49, 0.22);
+  transition: background 180ms ease-out;
+}
+
+.motion-switch i {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 2px 5px rgba(20, 34, 49, 0.22);
+  transition: transform 180ms ease-out;
+}
+
+.map-motion-toggle[aria-pressed='true'] .motion-switch {
+  background: #2773bf;
+}
+
+.map-motion-toggle[aria-pressed='true'] .motion-switch i {
+  transform: translateX(12px);
+}
+
 .map-state,
 .map-empty-state {
   position: absolute;
@@ -896,6 +1055,14 @@ onBeforeUnmount(() => {
   gap: 3px;
 }
 
+.weather-region-list .weather-spots {
+  overflow: hidden;
+  max-width: 260px;
+  color: #3f5366;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .weather-region-list small,
 .weather-values {
   color: var(--muted);
@@ -938,6 +1105,146 @@ onBeforeUnmount(() => {
   font-size: 12px;
 }
 
+:global(.weather-map-popup .weather-map-popup-spots) {
+  padding-top: 5px;
+  margin-top: 2px;
+  border-top: 1px solid rgba(23, 32, 42, 0.1);
+  color: #354b60;
+}
+
+:global(.weather-motion-cell) {
+  position: relative;
+  width: 138px;
+  height: 112px;
+  opacity: 0;
+  pointer-events: none;
+  transform: translate3d(0, 5px, 0) scale(0.92);
+  transition:
+    opacity 260ms ease-out,
+    transform 320ms ease-out;
+}
+
+:global(.weather-motion-cell.is-visible) {
+  opacity: 1;
+  transform: translate3d(0, 0, 0) scale(1);
+}
+
+:global(.weather-motion-cell::before) {
+  position: absolute;
+  inset: 22px 14px 8px;
+  border-radius: 50%;
+  content: '';
+  filter: blur(14px);
+}
+
+:global(.weather-motion-cell--rain::before) {
+  background: radial-gradient(circle, rgba(38, 91, 139, 0.2), rgba(43, 83, 121, 0));
+}
+
+:global(.weather-motion-cell--cloud::before) {
+  background: radial-gradient(circle, rgba(98, 113, 128, 0.3), rgba(121, 137, 151, 0));
+}
+
+:global(.weather-motion-clouds),
+:global(.weather-motion-rain) {
+  position: absolute;
+  overflow: hidden;
+  inset: 0;
+}
+
+:global(.weather-motion-rain::before) {
+  position: absolute;
+  inset: -30px 0 0;
+  background: repeating-linear-gradient(
+    103deg,
+    transparent 0 8px,
+    rgba(142, 199, 239, 0.24) 9px,
+    transparent 10px 17px
+  );
+  background-size: 100% 30px;
+  content: '';
+  filter: drop-shadow(0 0 2px rgba(102, 167, 217, 0.24));
+  animation: map-rain-sheet 820ms linear infinite;
+}
+
+:global(.weather-motion-clouds i) {
+  position: absolute;
+  top: var(--cloud-top);
+  left: var(--cloud-left);
+  width: 78px;
+  height: 27px;
+  border: 1px solid rgba(238, 244, 249, 0.35);
+  border-radius: 999px;
+  background: linear-gradient(180deg, rgba(227, 234, 240, 0.76), rgba(142, 160, 177, 0.52));
+  box-shadow:
+    24px -10px 0 2px rgba(209, 220, 229, 0.58),
+    50px 1px 0 -5px rgba(156, 173, 188, 0.48),
+    0 10px 24px rgba(45, 61, 76, 0.16);
+  filter: blur(2.2px);
+  animation: map-cloud-drift 6.8s ease-in-out var(--cloud-delay) infinite alternate;
+}
+
+:global(.weather-motion-cell--rain .weather-motion-clouds) {
+  opacity: 0.66;
+  transform: scale(0.92) translateY(-5px);
+}
+
+:global(.weather-motion-cell--cloud .weather-motion-clouds) {
+  opacity: 0.92;
+}
+
+:global(.weather-motion-cell--cloud .weather-motion-rain),
+:global(.weather-motion-cell:not(.weather-motion-cell--rain) .weather-motion-rain) {
+  display: none;
+}
+
+:global(.weather-motion-rain) {
+  top: 35px;
+  height: 78px;
+  mask-image: linear-gradient(to bottom, transparent, #000 12%, #000 82%, transparent);
+  -webkit-mask-image: linear-gradient(to bottom, transparent, #000 12%, #000 82%, transparent);
+}
+
+:global(.weather-motion-rain i) {
+  position: absolute;
+  top: -28px;
+  left: var(--rain-x);
+  width: 1.5px;
+  height: var(--rain-length);
+  border-radius: 999px;
+  background: linear-gradient(to bottom, rgba(225, 242, 255, 0), rgba(130, 190, 235, 0.86));
+  box-shadow: 0 0 5px rgba(111, 176, 225, 0.38);
+  transform: rotate(13deg);
+  animation: map-rain-fall var(--rain-duration) linear var(--rain-delay) infinite;
+}
+
+:global(.weather-motion-rain i:nth-child(3n)) {
+  width: 1px;
+  opacity: 0.55;
+  filter: blur(0.4px);
+}
+
+@keyframes map-rain-fall {
+  to {
+    transform: translate3d(-18px, 116px, 0) rotate(13deg);
+  }
+}
+
+@keyframes map-rain-sheet {
+  to {
+    transform: translate3d(-13px, 92px, 0);
+  }
+}
+
+@keyframes map-cloud-drift {
+  from {
+    transform: translate3d(-7px, 0, 0) scale(0.94);
+  }
+  to {
+    transform: translate3d(8px, 2px, 0) scale(1.04);
+  }
+}
+
 :deep(.maplibregl-popup-content) {
   border: 1px solid rgba(255, 255, 255, 0.8);
   border-radius: 14px;
@@ -965,6 +1272,7 @@ onBeforeUnmount(() => {
 @supports not (backdrop-filter: blur(1px)) {
   .map-view-toggle,
   .map-mode-controls button,
+  .map-motion-toggle,
   .map-caption,
   .weather-legend,
   :deep(.maplibregl-ctrl-group),
@@ -999,6 +1307,11 @@ onBeforeUnmount(() => {
     max-width: calc(100% - 20px);
   }
 
+  .map-motion-toggle {
+    top: 58px;
+    right: 10px;
+  }
+
   .weather-region-list {
     grid-template-columns: 1fr;
   }
@@ -1014,8 +1327,26 @@ onBeforeUnmount(() => {
 
 @media (prefers-reduced-motion: reduce) {
   .map-view-toggle,
-  .map-mode-controls button {
+  .map-mode-controls button,
+  .map-motion-toggle,
+  .motion-switch,
+  .motion-switch i,
+  :global(.weather-motion-cell) {
     transition: none;
+  }
+
+  :global(.weather-motion-rain) {
+    display: none;
+  }
+
+  :global(.weather-motion-clouds i) {
+    animation: none;
+  }
+}
+
+@media (prefers-contrast: more) {
+  :global(.weather-motion-cell) {
+    display: none;
   }
 }
 </style>

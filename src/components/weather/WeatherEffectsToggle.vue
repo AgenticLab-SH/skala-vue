@@ -17,8 +17,8 @@ const actionLabel = computed(() => {
 })
 
 const statusLabel = computed(() => {
-  if (!configStore.weatherEffectsEnabled) return '효과 끔'
-  return configStore.hasWeatherEffect ? '효과 켬' : '효과 대기'
+  if (!configStore.weatherEffectsEnabled) return '화면 효과 끔'
+  return configStore.hasWeatherEffect ? '화면 효과 켬' : '화면 효과 대기'
 })
 </script>
 
