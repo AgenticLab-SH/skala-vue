@@ -57,6 +57,7 @@ function precipitation(city) {
 }
 
 async function loadCities() {
+  configStore.clearWeatherEffect()
   status.value = 'loading'
   failedCount.value = 0
   const results = await Promise.allSettled(weatherCities.map((city) => requestWeatherBundle(city)))
@@ -69,6 +70,17 @@ async function loadCities() {
   status.value = nextMap.size ? 'success' : 'error'
 }
 
+function syncWeatherEffect() {
+  if (status.value !== 'success' || filteredCities.value.length !== 1) {
+    configStore.clearWeatherEffect()
+    return
+  }
+
+  const selectedCity = filteredCities.value[0]
+  const selectedWeather = cityWeather.value.get(selectedCity.id)?.current
+  if (selectedWeather) configStore.setWeatherEffect(selectedCity.name, selectedWeather)
+}
+
 watch(
   () => route.query.search,
   (value) => {
@@ -76,6 +88,8 @@ watch(
     if (next !== query.value) query.value = next
   },
 )
+
+watch([filteredCities, cityWeather, status], syncWeatherEffect)
 
 watch(
   () => route.query.favorite,

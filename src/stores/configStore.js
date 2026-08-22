@@ -1,6 +1,8 @@
 import { defineStore } from 'pinia'
 import { computed, ref, watch } from 'vue'
 
+import { createWeatherEffect, emptyWeatherEffect } from '../utils/weatherEffects'
+
 function readInitialConfig() {
   const saved =
     typeof localStorage === 'undefined' ? null : localStorage.getItem('cloud-route-config')
@@ -18,6 +20,8 @@ export const useConfigStore = defineStore('config', () => {
   // 여러 화면에서 같은 선택을 이어서 볼 수 있도록 검색 조건도 store에 함께 둡니다.
   const unit = ref(initial.unit ?? 'celsius')
   const favoriteCityIds = ref(initial.favoriteCityIds ?? [])
+  const weatherEffectsEnabled = ref(initial.weatherEffectsEnabled ?? true)
+  const weatherEffect = ref(emptyWeatherEffect())
   const lastViewedCityId = ref('')
   const planner = ref({
     originId: initial.planner?.originId ?? 'seoul',
@@ -27,9 +31,22 @@ export const useConfigStore = defineStore('config', () => {
 
   const unitSymbol = computed(() => (unit.value === 'celsius' ? '℃' : '℉'))
   const favoriteCityCount = computed(() => favoriteCityIds.value.length)
+  const hasWeatherEffect = computed(() => weatherEffect.value.mode !== 'none')
 
   function toggleUnit() {
     unit.value = unit.value === 'celsius' ? 'fahrenheit' : 'celsius'
+  }
+
+  function toggleWeatherEffects() {
+    weatherEffectsEnabled.value = !weatherEffectsEnabled.value
+  }
+
+  function setWeatherEffect(cityName, weather) {
+    weatherEffect.value = createWeatherEffect(weather, cityName)
+  }
+
+  function clearWeatherEffect() {
+    weatherEffect.value = emptyWeatherEffect()
   }
 
   function isFavorite(cityId) {
@@ -51,7 +68,7 @@ export const useConfigStore = defineStore('config', () => {
   }
 
   watch(
-    [unit, favoriteCityIds, planner],
+    [unit, favoriteCityIds, planner, weatherEffectsEnabled],
     () => {
       if (typeof localStorage === 'undefined') return
       localStorage.setItem(
@@ -60,6 +77,7 @@ export const useConfigStore = defineStore('config', () => {
           unit: unit.value,
           favoriteCityIds: favoriteCityIds.value,
           planner: planner.value,
+          weatherEffectsEnabled: weatherEffectsEnabled.value,
         }),
       )
     },
@@ -72,8 +90,14 @@ export const useConfigStore = defineStore('config', () => {
     lastViewedCityId,
     unitSymbol,
     favoriteCityCount,
+    weatherEffectsEnabled,
+    weatherEffect,
+    hasWeatherEffect,
     planner,
     toggleUnit,
+    toggleWeatherEffects,
+    setWeatherEffect,
+    clearWeatherEffect,
     isFavorite,
     toggleFavorite,
     rememberCity,

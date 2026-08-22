@@ -1,9 +1,28 @@
 <script setup>
+import { watch } from 'vue'
+import { useRoute } from 'vue-router'
+
 import UnitToggler from './components/weather/UnitToggler.vue'
+import WeatherEffectsOverlay from './components/weather/WeatherEffectsOverlay.vue'
+import WeatherEffectsToggle from './components/weather/WeatherEffectsToggle.vue'
+import { useConfigStore } from './stores/configStore'
+
+const route = useRoute()
+const configStore = useConfigStore()
+const weatherRoutes = new Set(['weather-home', 'weather-search', 'weather-detail'])
+
+watch(
+  () => route.name,
+  (routeName) => {
+    if (!weatherRoutes.has(routeName)) configStore.clearWeatherEffect()
+  },
+  { immediate: true },
+)
 </script>
 
 <template>
   <div class="site-shell">
+    <WeatherEffectsOverlay />
     <a class="skip-link" href="#main-content">본문으로 바로가기</a>
     <header class="site-header">
       <RouterLink class="brand" to="/" aria-label="구름사이 홈">
@@ -18,7 +37,10 @@ import UnitToggler from './components/weather/UnitToggler.vue'
         <RouterLink to="/challenges">수업 실습 기록</RouterLink>
       </nav>
 
-      <UnitToggler />
+      <div class="header-controls" aria-label="화면 설정">
+        <WeatherEffectsToggle />
+        <UnitToggler />
+      </div>
     </header>
 
     <main id="main-content" class="page-container" tabindex="-1">
@@ -39,6 +61,7 @@ import UnitToggler from './components/weather/UnitToggler.vue'
 
 <style scoped>
 .site-shell {
+  position: relative;
   min-height: 100vh;
 }
 
@@ -85,6 +108,13 @@ import UnitToggler from './components/weather/UnitToggler.vue'
   -webkit-backdrop-filter: blur(24px) saturate(155%);
 }
 
+.header-controls {
+  display: flex;
+  align-items: center;
+  justify-self: end;
+  gap: 6px;
+}
+
 .brand {
   display: inline-flex;
   width: max-content;
@@ -128,7 +158,6 @@ nav a.router-link-exact-active {
 }
 
 .site-header :deep(.el-button) {
-  justify-self: end;
   min-width: 44px;
   min-height: 44px;
   border: 0;

@@ -52,6 +52,7 @@ const resultFreshness = computed(() => {
 })
 
 async function submitPlanner(focusResult = true) {
+  configStore.clearWeatherEffect()
   configStore.savePlanner({
     originId: originId.value,
     activityId: activityId.value,
@@ -63,6 +64,12 @@ async function submitPlanner(focusResult = true) {
     departureAt: new Date(departureAt.value),
     maxTravelMinutes: maxTravelMinutes.value,
   })
+  if (planner.bestRecommendation.value) {
+    configStore.setWeatherEffect(
+      planner.bestRecommendation.value.city.name,
+      planner.bestRecommendation.value.weather,
+    )
+  }
   if (focusResult) {
     await nextTick()
     resultFeedback.value?.focus()

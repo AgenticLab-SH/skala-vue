@@ -42,6 +42,7 @@ function formatTime(value) {
 
 async function loadDetail() {
   if (!city.value) return
+  configStore.clearWeatherEffect()
   status.value = 'loading'
   bundle.value = null
   sunTimes.value = null
@@ -58,6 +59,7 @@ async function loadDetail() {
     return
   }
   bundle.value = weatherResult.value
+  configStore.setWeatherEffect(city.value.name, bundle.value.current)
   if (sunResult.status === 'fulfilled') {
     sunTimes.value = sunResult.value
     sunTimesStatus.value = 'success'
