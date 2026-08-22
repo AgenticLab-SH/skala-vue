@@ -12,8 +12,12 @@ const { increment } = counterStore
 <template>
   <section class="practice-card">
     <h2>Counter Store</h2>
-    <p>원본 카운트: <strong>{{ count }}</strong></p>
-    <p>두 배 값: <strong>{{ doubleCount }}</strong></p>
+    <p>
+      원본 카운트: <strong>{{ count }}</strong>
+    </p>
+    <p>
+      두 배 값: <strong>{{ doubleCount }}</strong>
+    </p>
     <el-button @click="increment">숫자 1 증가</el-button>
   </section>
 </template>

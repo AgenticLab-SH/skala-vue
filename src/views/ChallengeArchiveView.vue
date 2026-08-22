@@ -37,6 +37,12 @@ function updateLifecycleMessage(event) {
 
 <template>
   <section class="archive-view">
+    <header class="archive-intro">
+      <p>수업 실습 기록</p>
+      <h1>코드 챌린지를 페이지 순서대로 정리했습니다.</h1>
+      <span>각 항목에서 수업 예제의 실행 결과를 직접 확인할 수 있습니다.</span>
+    </header>
+
     <nav class="chapter-index" aria-label="코드 챌린지 목차">
       <a href="#challenge-72">72쪽</a>
       <a href="#challenge-93">93쪽</a>
@@ -198,16 +204,56 @@ function updateLifecycleMessage(event) {
 </template>
 
 <style scoped>
+.archive-view {
+  padding-top: 56px;
+}
+
+.archive-intro {
+  max-width: 820px;
+  margin-bottom: 38px;
+}
+
+.archive-intro p,
+.archive-intro h1,
+.archive-intro span {
+  margin: 0;
+}
+
+.archive-intro p {
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.archive-intro h1 {
+  margin-top: 12px;
+  font-size: clamp(38px, 6vw, 62px);
+  line-height: 1.1;
+  letter-spacing: -0.055em;
+  word-break: keep-all;
+}
+
+.archive-intro span {
+  display: block;
+  margin-top: 16px;
+  color: var(--muted);
+  line-height: 1.7;
+}
+
 .chapter-index {
   display: flex;
   flex-wrap: wrap;
   gap: 10px 18px;
   padding: 12px 0;
-  border-bottom: 1px solid #bbb;
+  border-top: 1px solid var(--ink);
+  border-bottom: 1px solid var(--line-strong);
 }
 
 .chapter-index a {
-  color: inherit;
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  color: var(--ink);
 }
 
 .challenge-section,
@@ -249,6 +295,10 @@ h2 {
 }
 
 @media (max-width: 640px) {
+  .archive-view {
+    padding-top: 36px;
+  }
+
   h2 {
     font-size: 21px;
   }

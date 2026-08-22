@@ -20,25 +20,42 @@ export function calculateStraightDistance(from, to) {
 
 export function estimateTravel(from, to) {
   const straightDistance = calculateStraightDistance(from, to)
+  const geometry = [
+    [from.longitude, from.latitude],
+    [to.longitude, to.latitude],
+  ]
   if (from.transportMode === 'air' || to.transportMode === 'air') {
     return {
       distance: Math.round(straightDistance),
       minutes: Math.round(150 + (straightDistance / 500) * 60),
       source: '공항 이동 포함 항공 추정',
+      geometry,
     }
   }
   const distance = Math.round(straightDistance * 1.24)
   const minutes = Math.round((distance / 72) * 60 + 20)
-  return { distance, minutes, source: '직선거리 기반 추정' }
+  return { distance, minutes, source: '직선거리 기반 추정', geometry }
 }
 
 export async function requestDrivingRoute(from, to) {
-  if (from.id === to.id) return { distance: 0, minutes: 0, source: '같은 지역' }
+  if (from.id === to.id) {
+    return {
+      distance: 0,
+      minutes: 0,
+      source: '같은 지역',
+      geometry: [[from.longitude, from.latitude]],
+    }
+  }
   if (from.transportMode === 'air' || to.transportMode === 'air') return estimateTravel(from, to)
   try {
     const coordinates = `${from.longitude},${from.latitude};${to.longitude},${to.latitude}`
     const response = await routeApi.get(`/route/v1/driving/${coordinates}`, {
-      params: { overview: 'false', alternatives: 'false', steps: 'false' },
+      params: {
+        overview: 'full',
+        geometries: 'geojson',
+        alternatives: 'false',
+        steps: 'false',
+      },
     })
     const route = response.data.routes?.[0]
     if (!route) return estimateTravel(from, to)
@@ -46,6 +63,7 @@ export async function requestDrivingRoute(from, to) {
       distance: Math.round(route.distance / 1000),
       minutes: Math.round(route.duration / 60),
       source: 'OSRM 경로',
+      geometry: route.geometry?.coordinates ?? estimateTravel(from, to).geometry,
     }
   } catch {
     return estimateTravel(from, to)

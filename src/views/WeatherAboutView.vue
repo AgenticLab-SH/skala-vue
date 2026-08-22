@@ -2,113 +2,125 @@
 import { isOpenWeatherConfigured } from '../services/weatherApi'
 
 const openWeatherReady = isOpenWeatherConfigured()
+
+const lessons = [
+  {
+    pages: '126·144쪽',
+    topic: '반응형 상태와 계산 속성',
+    use: '출발 조건은 ref로 관리하고, 선택한 도시와 추천 문구는 computed로 계산했습니다.',
+  },
+  {
+    pages: '146~177쪽',
+    topic: '컴포넌트, Props·Emits, Slot',
+    use: '입력, 추천, 후보, 시간 비교, 경로 지도를 나누고 부모 화면에서 결과를 연결했습니다.',
+  },
+  {
+    pages: '178~197쪽',
+    topic: 'Vue Router',
+    use: '추천·도시 목록·상세·구현 과정·실습 기록을 경로로 분리했습니다.',
+  },
+  {
+    pages: '198~211쪽',
+    topic: 'Pinia',
+    use: '온도 단위, 관심 도시, 마지막 출발 조건을 화면 사이에서 유지했습니다.',
+  },
+  {
+    pages: '212~229쪽',
+    topic: 'Axios',
+    use: '날씨와 경로 API를 요청하고 서로 다른 응답을 같은 형태로 정리했습니다.',
+  },
+  {
+    pages: '230~273쪽',
+    topic: 'UI 라이브러리와 빌드 환경',
+    use: 'Element Plus는 필요한 컴포넌트만 등록하고 환경별 빌드를 따로 확인했습니다.',
+  },
+]
 </script>
 
 <template>
-  <div class="about-view">
-    <header>
+  <div class="process-view">
+    <header class="page-intro">
       <p>구현 과정</p>
-      <h1>날씨 카드에서<br />이동 판단 서비스로</h1>
-      <span>
-        수업에서 만든 작은 예제들을 버리지 않고, 실제로 함께 쓰이는 구조로 다시 연결했습니다.
-      </span>
+      <h1>날씨 카드를<br />이동 추천으로 확장했습니다.</h1>
+      <span>수업에서 배운 기능을 따로 나열하지 않고, 한 번의 계획 흐름 안에 연결했습니다.</span>
     </header>
 
-    <section class="story">
+    <section class="origin-section">
       <p>시작</p>
       <div>
-        <h2>처음에는 네 도시의 현재 날씨만 보여 주었습니다.</h2>
+        <h2>현재 날씨만 보여 주는 화면에서 출발했습니다.</h2>
         <p>
-          카드 컴포넌트, props와 emit, computed를 익히기에는 충분했지만 사용자가 다음 행동을 정하는
-          데에는 도움이 적었습니다. 그래서 “날씨가 더 나은 곳으로 움직일 수 없을까?”라는 질문을
-          서비스의 출발점으로 삼았습니다.
+          처음에는 서울·수원·창원·부산의 날씨 카드를 만들었습니다. 카드를 읽은 다음 무엇을 할 수
+          있을지 고민하다가, 도착할 시간의 예보를 비교해 갈 곳을 정하는 기능으로 방향을 바꿨습니다.
         </p>
       </div>
     </section>
 
-    <section class="process-grid">
-      <article>
-        <span>01 · Composition API</span>
-        <h2>입력과 결과를 반응형으로 연결했습니다.</h2>
-        <p>출발지, 활동, 시간을 ref로 두고 추천 결과와 문구는 computed로 계산했습니다.</p>
-      </article>
-      <article>
-        <span>02 · Components</span>
-        <h2>한 화면을 책임 단위로 나눴습니다.</h2>
-        <p>
-          입력, 대표 추천, 후보 도시, 시간 비교를 컴포넌트로 분리하고 props·emit으로 연결했습니다.
-        </p>
-      </article>
-      <article>
-        <span>03 · Pinia</span>
-        <h2>화면을 이동해도 선택을 기억합니다.</h2>
-        <p>온도 단위와 마지막 검색 조건을 store와 localStorage에 보관했습니다.</p>
-      </article>
-      <article>
-        <span>04 · Router</span>
-        <h2>추천과 근거를 별도 주소로 확인합니다.</h2>
-        <p>목적지 상세를 동적 경로로 만들고, 검색어와 계획 조건은 query로 전달했습니다.</p>
-      </article>
-      <article>
-        <span>05 · Axios</span>
-        <h2>서로 다른 API를 같은 데이터로 바꿨습니다.</h2>
-        <p>현재 날씨와 예보를 정규화하여 추천 계산에서는 제공자를 신경 쓰지 않도록 했습니다.</p>
-      </article>
-      <article>
-        <span>06 · Failure UI</span>
-        <h2>실패도 화면의 한 상태로 다뤘습니다.</h2>
-        <p>일부 도시 실패, 전체 요청 실패, 경로 추정 전환을 숨기지 않고 결과와 함께 표시합니다.</p>
-      </article>
+    <section class="learning-section" aria-labelledby="learning-title">
+      <div class="section-title">
+        <p>수업 내용 적용</p>
+        <h2 id="learning-title">배운 개념이 실제로 쓰인 곳</h2>
+      </div>
+      <div class="learning-list">
+        <article v-for="lesson in lessons" :key="lesson.pages">
+          <span>{{ lesson.pages }}</span>
+          <strong>{{ lesson.topic }}</strong>
+          <p>{{ lesson.use }}</p>
+        </article>
+      </div>
     </section>
 
-    <section class="api-flow">
-      <div>
+    <section class="flow-section" aria-labelledby="flow-title">
+      <div class="section-title">
         <p>데이터 흐름</p>
-        <h2>출발 조건에서 추천까지</h2>
+        <h2 id="flow-title">입력에서 경로까지</h2>
       </div>
       <ol>
-        <li><span>1</span>도시 간 이동시간을 추정해 후보를 좁힙니다.</li>
-        <li><span>2</span>후보 도시의 시간대별 예보를 가져옵니다.</li>
-        <li><span>3</span>이동 가능한 후보를 실제 경로 API로 다시 확인합니다.</li>
-        <li><span>4</span>도착 시각의 예보를 골라 활동 점수를 계산합니다.</li>
-        <li><span>5</span>출발 시각을 늦춘 경우까지 함께 비교합니다.</li>
+        <li><span>1</span>이동 가능한 도시를 먼저 고릅니다.</li>
+        <li><span>2</span>도착 시각과 가까운 예보를 찾습니다.</li>
+        <li><span>3</span>활동별 기준으로 점수와 이유를 계산합니다.</li>
+        <li><span>4</span>OSRM 경로 좌표를 지도에 그리고 목적지 건물을 3D로 표시합니다.</li>
       </ol>
     </section>
 
-    <section class="failure-example">
-      <div>
-        <p>실패 화면</p>
-        <h2>API 키가 없는 화면도 직접 확인했습니다.</h2>
-        <span>
-          개발 중 처음 만난 실패는 OpenWeather 키가 없는 상태였습니다. 버튼만 막는 데서 끝내지 않고
-          공개 배포에서도 서비스가 동작하도록 제공자를 전환했습니다.
-        </span>
+    <section class="failure-section" aria-labelledby="failure-title">
+      <div class="section-title">
+        <p>실패와 수정</p>
+        <h2 id="failure-title">기능을 멈추지 않는 쪽으로 고쳤습니다.</h2>
       </div>
-      <div class="failure-panel" role="status">
-        <span>{{ openWeatherReady ? 'OpenWeather 연결됨' : 'OpenWeather 키 없음' }}</span>
-        <strong>
-          {{
-            openWeatherReady
-              ? 'OpenWeather 실제 API로 실행 중입니다.'
-              : '공개용 실시간 예보로 전환했습니다.'
-          }}
-        </strong>
-        <p v-if="!openWeatherReady">
-          키를 브라우저에 노출하지 않기 위해 Open-Meteo 예보를 사용합니다. `.env.local`에 개인 키가
-          있으면 같은 화면에서 OpenWeather 현재 날씨와 5일 예보를 사용합니다.
-        </p>
-        <p v-else>현재 날씨와 5일/3시간 예보 요청이 모두 OpenWeather를 사용합니다.</p>
+      <div class="failure-list">
+        <article>
+          <strong>API 키가 없었습니다.</strong>
+          <p>
+            공개 화면에 키를 넣는 대신 Open-Meteo로 전환했습니다. 로컬에 개인 키가 있으면 수업에서
+            사용한 OpenWeather 요청을 그대로 확인할 수 있습니다.
+          </p>
+        </article>
+        <article>
+          <strong>경로 요청이 실패하면 추천도 사라졌습니다.</strong>
+          <p>추천은 유지하고 직선거리 기반 시간과 추정선을 표시하도록 바꿨습니다.</p>
+        </article>
+        <article>
+          <strong>3D 건물이 콘솔 오류로 보이지 않았습니다.</strong>
+          <p>
+            건물 바닥 높이에 중첩한 zoom 조건이 MapLibre 표현식 규칙에 맞지 않았습니다. zoom은 높이
+            보간에만 쓰고 바닥 값은 건물 데이터에서 바로 읽도록 수정했습니다.
+          </p>
+        </article>
+      </div>
+      <div class="runtime-status" role="status">
+        <span>현재 실행 환경</span>
+        <strong>{{ openWeatherReady ? 'OpenWeather 연결' : 'Open-Meteo 공개 예보 사용' }}</strong>
       </div>
     </section>
 
-    <section class="limits">
-      <p>확인한 한계</p>
+    <section class="limit-section">
+      <p>현재 범위</p>
       <div>
-        <h2>그늘과 비가림 경로는 같은 문제가 아닙니다.</h2>
+        <h2>이동선과 3D 건물까지 구현했습니다.</h2>
         <p>
-          건물 그림자는 햇빛을 줄이지만 비를 막아 주지는 않습니다. 이번 결과물은 실제 도로의
-          그림자를 계산했다고 표현하지 않고, 도시 간 이동과 출발 시간 선택에 집중했습니다. 경로
-          서버가 실패하면 직선거리 기반 추정값으로 바뀌며 화면에 출처가 표시됩니다.
+          지도는 실제 도로 경로를 보여 주지만, 건물 그림자나 비가림 구간을 계산하지는 않습니다. 그늘
+          우선 경로는 건물 높이, 태양 위치, 보행 경로를 함께 계산해야 하므로 다음 단계로 남겼습니다.
         </p>
       </div>
     </section>
@@ -116,195 +128,207 @@ const openWeatherReady = isOpenWeatherConfigured()
 </template>
 
 <style scoped>
-.about-view {
-  padding-top: 64px;
+.process-view {
+  padding-top: 58px;
 }
-header p {
-  margin: 0 0 18px;
+
+.page-intro p,
+.page-intro h1,
+.page-intro span {
+  margin: 0;
+}
+
+.page-intro > p,
+.section-title > p,
+.origin-section > p,
+.limit-section > p {
   color: var(--accent);
   font-size: 12px;
   font-weight: 800;
-  letter-spacing: 0.1em;
 }
-header h1 {
-  margin: 0;
+
+.page-intro h1 {
+  max-width: 860px;
+  margin-top: 16px;
   font-size: clamp(42px, 8vw, 76px);
-  line-height: 1.08;
+  line-height: 1.06;
   letter-spacing: -0.065em;
 }
-header > span {
+
+.page-intro span {
   display: block;
-  max-width: 650px;
-  margin-top: 24px;
+  max-width: 640px;
+  margin-top: 22px;
   color: var(--muted);
   font-size: 17px;
   line-height: 1.75;
 }
-.story,
-.limits {
+
+.origin-section,
+.limit-section {
   display: grid;
-  grid-template-columns: 120px 1fr;
+  grid-template-columns: 130px 1fr;
   gap: 24px;
-  margin-top: 64px;
+  margin-top: 62px;
   padding: 30px 0;
   border-top: 1px solid var(--ink);
 }
-.story > p,
-.limits > p {
+
+.origin-section > p,
+.origin-section h2,
+.origin-section div p,
+.limit-section > p,
+.limit-section h2,
+.limit-section div p,
+.section-title p,
+.section-title h2 {
   margin: 0;
-  color: var(--accent);
-  font-size: 12px;
-  font-weight: 800;
 }
-.story h2,
-.limits h2 {
-  margin: 0;
-  font-size: 28px;
+
+.origin-section h2,
+.limit-section h2,
+.section-title h2 {
+  font-size: 26px;
   letter-spacing: -0.04em;
 }
-.story div p,
-.limits div p {
-  max-width: 760px;
-  margin: 16px 0 0;
+
+.origin-section div p,
+.limit-section div p {
+  max-width: 780px;
+  margin-top: 14px;
   color: var(--muted);
   line-height: 1.8;
 }
-.process-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  margin-top: 34px;
+
+.learning-section,
+.flow-section,
+.failure-section {
+  margin-top: 56px;
+}
+
+.section-title h2 {
+  margin-top: 8px;
+}
+
+.learning-list {
+  margin-top: 22px;
   border-top: 1px solid var(--line-strong);
-  border-left: 1px solid var(--line-strong);
 }
-.process-grid article {
-  min-height: 230px;
-  padding: 25px;
-  border-right: 1px solid var(--line-strong);
-  border-bottom: 1px solid var(--line-strong);
+
+.learning-list article {
+  display: grid;
+  grid-template-columns: 110px minmax(180px, 0.8fr) 1.6fr;
+  gap: 22px;
+  align-items: start;
+  padding: 22px 0;
+  border-bottom: 1px solid var(--line);
 }
-.process-grid span {
+
+.learning-list span {
   color: var(--accent);
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 800;
 }
-.process-grid h2 {
-  margin: 32px 0 12px;
-  font-size: 19px;
-  line-height: 1.45;
-}
-.process-grid p {
+
+.learning-list p,
+.failure-list p {
   margin: 0;
   color: var(--muted);
-  font-size: 14px;
   line-height: 1.7;
 }
-.api-flow {
+
+.flow-section {
   display: grid;
-  grid-template-columns: 0.8fr 1.2fr;
+  grid-template-columns: 0.75fr 1.25fr;
   gap: 50px;
-  margin-top: 64px;
-  padding: 38px;
+  padding: 34px;
+  border-radius: 18px;
   background: var(--ink);
   color: #fff;
 }
-.api-flow p,
-.api-flow h2 {
-  margin: 0;
+
+.flow-section .section-title > p {
+  color: #9fc6f3;
 }
-.api-flow p {
-  color: #93b7dd;
-  font-size: 12px;
-  font-weight: 800;
-}
-.api-flow h2 {
-  margin-top: 12px;
-  font-size: 28px;
-}
-.api-flow ol {
+
+.flow-section ol {
   padding: 0;
   margin: 0;
   list-style: none;
 }
-.api-flow li {
+
+.flow-section li {
   display: flex;
   gap: 14px;
-  padding: 12px 0;
-  border-top: 1px solid #3d4147;
+  padding: 13px 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
 }
-.api-flow li span {
-  color: #93b7dd;
+
+.flow-section li span {
+  color: #9fc6f3;
   font-size: 12px;
   font-weight: 800;
 }
-.failure-example {
+
+.failure-list {
+  margin-top: 22px;
+  border-top: 1px solid var(--line-strong);
+}
+
+.failure-list article {
   display: grid;
-  grid-template-columns: 0.9fr 1.1fr;
-  gap: 40px;
-  margin-top: 64px;
-  padding: 34px;
-  border: 1px solid var(--line-strong);
+  grid-template-columns: minmax(220px, 0.75fr) 1.25fr;
+  gap: 24px;
+  padding: 22px 0;
+  border-bottom: 1px solid var(--line);
 }
-.failure-example > div > p,
-.failure-example h2,
-.failure-example span {
-  margin: 0;
+
+.runtime-status {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  margin-top: 16px;
+  padding: 18px 20px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--surface);
 }
-.failure-example > div > p {
-  color: var(--accent);
-  font-size: 12px;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-}
-.failure-example h2 {
-  margin: 12px 0;
-  font-size: 24px;
-  letter-spacing: -0.04em;
-}
-.failure-example > div > span {
-  display: block;
+
+.runtime-status span {
   color: var(--muted);
-  line-height: 1.7;
 }
-.failure-panel {
-  padding: 24px;
-  border: 1px solid var(--ink);
-  background: var(--soft);
-}
-.failure-panel > span {
-  color: var(--accent);
-  font-size: 11px;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-}
-.failure-panel strong {
-  display: block;
-  margin-top: 12px;
-  font-size: 20px;
-}
-.failure-panel p {
-  margin: 12px 0 0;
-  color: var(--muted);
-  font-size: 14px;
-  line-height: 1.7;
-}
+
 @media (max-width: 760px) {
-  .about-view {
+  .process-view {
     padding-top: 38px;
   }
-  .story,
-  .limits,
-  .api-flow,
-  .failure-example {
+
+  .origin-section,
+  .limit-section,
+  .flow-section,
+  .learning-list article,
+  .failure-list article {
     grid-template-columns: 1fr;
   }
-  .process-grid {
-    grid-template-columns: 1fr;
+
+  .origin-section,
+  .limit-section {
+    gap: 12px;
   }
-  .process-grid article {
-    min-height: auto;
+
+  .learning-list article,
+  .failure-list article {
+    gap: 8px;
   }
-  .api-flow {
+
+  .flow-section {
+    gap: 28px;
     padding: 26px 20px;
+  }
+
+  .runtime-status {
+    flex-direction: column;
+    gap: 6px;
   }
 }
 </style>

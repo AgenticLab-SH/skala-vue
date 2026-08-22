@@ -169,6 +169,8 @@ onMounted(loadDetail)
   margin-top: 30px;
   padding: 32px;
   border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--surface);
 }
 .state-panel button {
   display: block;
@@ -225,9 +227,13 @@ onMounted(loadDetail)
   font-weight: 700;
 }
 .metric-grid {
+  overflow: hidden;
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  border-bottom: 1px solid var(--ink);
+  margin-top: 18px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--surface);
 }
 .metric-grid article {
   padding: 24px 18px;
@@ -267,8 +273,9 @@ onMounted(loadDetail)
   display: grid;
   grid-template-columns: repeat(8, minmax(115px, 1fr));
   overflow-x: auto;
-  border-top: 1px solid var(--line-strong);
-  border-bottom: 1px solid var(--line-strong);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--surface);
 }
 .forecast-list article {
   min-width: 115px;
@@ -297,8 +304,10 @@ onMounted(loadDetail)
   gap: 20px;
   align-items: center;
   margin-top: 54px;
-  padding: 28px 0;
-  border-top: 1px solid var(--ink);
+  padding: 28px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--surface);
 }
 .local-note p,
 .local-note h2 {

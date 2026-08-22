@@ -1,14 +1,16 @@
 :root {
-  --ink: #17191c;
-  --muted: #676c73;
-  --accent: #2563a8;
-  --line: #d9dce0;
-  --line-strong: #aeb3b9;
+  --ink: #17202a;
+  --muted: #626c77;
+  --accent: #1e66c1;
+  --route: #2f7de1;
+  --line: #d8dfe6;
+  --line-strong: #a9b3bd;
   --surface: #ffffff;
-  --soft: #f4f5f6;
+  --soft: #f2f5f8;
+  --glass: rgba(255, 255, 255, 0.72);
   font-family: Pretendard, 'Noto Sans KR', 'Apple SD Gothic Neo', Arial, sans-serif;
   color: var(--ink);
-  background: #fbfbfa;
+  background: #eef2f5;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
 }
@@ -24,7 +26,7 @@ html {
 body {
   margin: 0;
   min-height: 100vh;
-  background: #fbfbfa;
+  background: #eef2f5;
 }
 
 button,
@@ -37,6 +39,23 @@ textarea {
 button,
 select {
   cursor: pointer;
+}
+
+button,
+a {
+  -webkit-tap-highlight-color: transparent;
+}
+
+button {
+  transition:
+    transform 140ms ease,
+    background-color 140ms ease,
+    border-color 140ms ease,
+    color 140ms ease;
+}
+
+button:active:not(:disabled) {
+  transform: scale(0.98);
 }
 
 button:focus-visible,
@@ -120,5 +139,6 @@ code {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
   }
 }

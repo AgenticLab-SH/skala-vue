@@ -100,10 +100,13 @@ const temperatureText = computed(() =>
 
 <style scoped>
 .recommendation {
+  overflow: hidden;
   display: grid;
   grid-template-columns: minmax(0, 1.5fr) minmax(280px, 0.75fr);
-  border: 1px solid var(--ink);
+  border: 1px solid var(--line-strong);
+  border-radius: 20px;
   background: var(--surface);
+  box-shadow: 0 14px 36px rgba(25, 38, 52, 0.07);
 }
 
 .recommendation-copy,
@@ -112,7 +115,7 @@ const temperatureText = computed(() =>
 }
 
 .score-panel {
-  border-left: 1px solid var(--ink);
+  border-left: 1px solid var(--line);
   background: var(--soft);
 }
 
@@ -223,7 +226,7 @@ dd {
   }
 
   .score-panel {
-    border-top: 1px solid var(--ink);
+    border-top: 1px solid var(--line);
     border-left: 0;
   }
 }

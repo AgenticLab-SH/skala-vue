@@ -91,7 +91,7 @@ onMounted(loadCities)
   <div class="city-view">
     <header class="page-intro">
       <h1>도시 날씨</h1>
-      <span>추천 결과를 보기 전에 각 지역의 현재 날씨를 한눈에 확인합니다.</span>
+      <span>지역별 현재 날씨와 관심 도시를 확인합니다.</span>
     </header>
 
     <div class="search-row">
@@ -177,8 +177,10 @@ onMounted(loadCities)
   align-items: center;
   margin-top: 48px;
   padding: 18px 0;
-  border-top: 1px solid var(--ink);
-  border-bottom: 1px solid var(--ink);
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: var(--surface);
 }
 .search-row label {
   font-size: 13px;
@@ -187,9 +189,9 @@ onMounted(loadCities)
 .search-row input {
   width: 100%;
   padding: 12px 0;
-  border: 0;
-  border-bottom: 1px solid var(--line-strong);
-  background: transparent;
+  border: 1px solid var(--line-strong);
+  border-radius: 10px;
+  background: #fff;
   font-size: 18px;
 }
 .search-row span {
@@ -208,9 +210,17 @@ onMounted(loadCities)
 }
 .favorite-filter {
   margin-top: 14px;
+  padding: 0 14px;
+  border: 1px solid var(--line-strong);
+  border-radius: 12px;
+  background: var(--surface);
 }
 .city-list {
+  overflow: hidden;
   margin-top: 22px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: var(--surface);
 }
 .city-row {
   display: grid;
@@ -218,6 +228,9 @@ onMounted(loadCities)
   gap: 12px;
   align-items: center;
   border-bottom: 1px solid var(--line);
+}
+.city-row:last-of-type {
+  border-bottom: 0;
 }
 .city-link {
   display: grid;
@@ -259,6 +272,8 @@ onMounted(loadCities)
   margin-top: 24px;
   padding: 32px;
   border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--surface);
   color: var(--muted);
 }
 .loading-list p {

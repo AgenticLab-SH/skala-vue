@@ -25,8 +25,7 @@ const emit = defineEmits([
   <form class="planner-form" @submit.prevent="emit('submit')">
     <div class="form-heading">
       <div>
-        <h2>어떤 날을 보내고 싶나요?</h2>
-        <p>출발 조건을 정하면 예보와 이동 시간을 함께 비교합니다.</p>
+        <h2>출발 조건</h2>
       </div>
     </div>
 
@@ -84,7 +83,7 @@ const emit = defineEmits([
     </fieldset>
 
     <button class="primary-action" type="submit" :disabled="loading">
-      {{ loading ? '날씨를 비교하고 있습니다…' : '맑은 쪽 찾아보기' }}
+      {{ loading ? '예보를 비교하고 있습니다…' : '추천 확인하기' }}
     </button>
   </form>
 </template>
@@ -93,7 +92,9 @@ const emit = defineEmits([
 .planner-form {
   padding: 32px;
   border: 1px solid var(--line);
+  border-radius: 20px;
   background: var(--surface);
+  box-shadow: 0 12px 34px rgba(25, 38, 52, 0.06);
 }
 
 .form-heading {
@@ -139,7 +140,7 @@ input[type='datetime-local'] {
   height: 46px;
   padding: 0 12px;
   border: 1px solid var(--line-strong);
-  border-radius: 0;
+  border-radius: 12px;
   background: #fff;
   color: var(--ink);
 }
@@ -162,6 +163,7 @@ fieldset {
   min-height: 64px;
   padding: 12px;
   border: 1px solid var(--line);
+  border-radius: 12px;
   align-items: center;
   gap: 10px;
   cursor: pointer;
@@ -196,6 +198,7 @@ fieldset {
   min-height: 50px;
   margin-top: 24px;
   border: 1px solid var(--ink);
+  border-radius: 14px;
   background: var(--ink);
   color: #fff;
   font-weight: 700;

@@ -27,9 +27,13 @@ const router = createRouter({
       component: () => import('../views/ChallengeArchiveView.vue'),
     },
     {
-      path: '/about',
-      name: 'weather-about',
+      path: '/process',
+      name: 'weather-process',
       component: () => import('../views/WeatherAboutView.vue'),
+    },
+    {
+      path: '/about',
+      redirect: '/process',
     },
     {
       path: '/:pathMatch(.*)*',

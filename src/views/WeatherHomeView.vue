@@ -1,5 +1,5 @@
 <script setup>
-import { computed, nextTick, onMounted, ref, watch } from 'vue'
+import { computed, defineAsyncComponent, nextTick, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 
 import CandidateCard from '../components/planner/CandidateCard.vue'
@@ -14,6 +14,7 @@ import { useConfigStore } from '../stores/configStore'
 const router = useRouter()
 const configStore = useConfigStore()
 const planner = useTripPlanner()
+const RouteMap = defineAsyncComponent(() => import('../components/planner/RouteMap.vue'))
 
 function toLocalInputValue(date) {
   const offset = date.getTimezoneOffset() * 60 * 1000
@@ -90,14 +91,11 @@ onMounted(() => submitPlanner(false))
 <template>
   <div class="home-view">
     <section class="hero-copy">
-      <p class="eyebrow">도착 시각 기준 예보</p>
-      <h1>비를 피하고,<br />맑은 쪽으로 움직입니다.</h1>
+      <p class="eyebrow">날씨를 보고 움직이는 방법</p>
+      <h1>도착할 때<br />맑은 곳을 찾습니다.</h1>
       <div class="hero-description">
-        <p>
-          현재 위치의 날씨만 보는 대신, 도착할 시간의 예보를 비교합니다. 가고 싶은 활동을 고르면
-          이동 가능한 도시 중 더 나은 선택을 찾습니다.
-        </p>
-        <p class="data-note">실시간 예보 · 최대 5일 · 이동시간 반영</p>
+        <p>출발 시각과 활동을 고르면 이동 가능한 도시의 도착 예보를 비교합니다.</p>
+        <p class="data-note">최대 5일 예보 · 이동 시간 반영</p>
       </div>
     </section>
 
@@ -145,7 +143,7 @@ onMounted(() => submitPlanner(false))
       <template v-else-if="planner.bestRecommendation.value">
         <div ref="resultFeedback" class="result-heading" tabindex="-1">
           <div>
-            <h2>오늘의 이동 제안</h2>
+            <h2>추천 목적지</h2>
             <span>
               {{ origin.name }} 출발 · {{ activity.label }} · {{ planner.dataSource.value }} 예보 ·
               {{ resultFreshness }}
@@ -160,9 +158,20 @@ onMounted(() => submitPlanner(false))
           @open-detail="openDetail(planner.bestRecommendation.value)"
         />
 
+        <Suspense>
+          <RouteMap
+            :origin="origin"
+            :destination="planner.bestRecommendation.value.city"
+            :route="planner.bestRecommendation.value.route"
+          />
+          <template #fallback>
+            <div class="loading-panel" role="status">경로 지도를 준비하고 있습니다.</div>
+          </template>
+        </Suspense>
+
         <div v-if="planner.recommendations.value.length > 1" class="candidate-list">
           <div class="candidate-heading">
-            <h3>다른 선택지도 비교했습니다.</h3>
+            <h3>다른 선택지</h3>
             <span>점수는 강수 45%, 기온 25%, 바람 20%, 습도 10%를 반영합니다.</span>
           </div>
           <CandidateCard
@@ -187,24 +196,6 @@ onMounted(() => submitPlanner(false))
           일부 도시 {{ planner.failedCityCount.value }}곳은 응답이 없어, 확인된 도시만 비교했습니다.
         </p>
       </template>
-    </section>
-
-    <section class="service-notes">
-      <article>
-        <span>도착할 때의 날씨</span>
-        <h2>현재값 대신 이동 후 예보를 봅니다.</h2>
-        <p>도시까지 걸리는 시간을 먼저 계산하고 가장 가까운 시간대의 예보를 선택합니다.</p>
-      </article>
-      <article>
-        <span>설명 가능한 추천</span>
-        <h2>왜 추천했는지 점수로 남깁니다.</h2>
-        <p>활동마다 비, 기온, 바람의 허용 범위를 다르게 두어 결과를 직접 비교할 수 있습니다.</p>
-      </article>
-      <article>
-        <span>과장하지 않는 경로</span>
-        <h2>실패하면 추정값이라고 밝힙니다.</h2>
-        <p>경로 API 응답이 없을 때는 직선거리 기반 값으로 전환하고 데이터 출처를 표시합니다.</p>
-      </article>
     </section>
   </div>
 </template>
@@ -295,6 +286,7 @@ onMounted(() => submitPlanner(false))
 .error-panel {
   padding: 34px;
   border: 1px solid var(--line);
+  border-radius: 18px;
   background: var(--surface);
 }
 
@@ -340,6 +332,8 @@ onMounted(() => submitPlanner(false))
   margin-top: 32px;
   padding: 26px;
   border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--surface);
 }
 
 .partial-notice {
@@ -351,40 +345,6 @@ onMounted(() => submitPlanner(false))
 .result-heading:focus,
 .error-panel:focus {
   outline: 0;
-}
-
-.service-notes {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  border-top: 1px solid var(--ink);
-  border-bottom: 1px solid var(--ink);
-}
-
-.service-notes article {
-  padding: 30px 24px;
-}
-
-.service-notes article + article {
-  border-left: 1px solid var(--line);
-}
-
-.service-notes span {
-  color: var(--accent);
-  font-size: 12px;
-  font-weight: 800;
-}
-
-.service-notes h2 {
-  margin: 12px 0;
-  font-size: 19px;
-  line-height: 1.45;
-}
-
-.service-notes p {
-  margin: 0;
-  color: var(--muted);
-  font-size: 14px;
-  line-height: 1.7;
 }
 
 @media (max-width: 760px) {
@@ -404,15 +364,6 @@ onMounted(() => submitPlanner(false))
 
   .hero-description .data-note {
     white-space: normal;
-  }
-
-  .service-notes {
-    grid-template-columns: 1fr;
-  }
-
-  .service-notes article + article {
-    border-top: 1px solid var(--line);
-    border-left: 0;
   }
 }
 </style>
