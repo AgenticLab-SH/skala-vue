@@ -220,27 +220,43 @@ export async function requestKoreaWeatherGrid({ force = false } = {}) {
   }
 
   try {
-    const response = await openMeteoApi.get('/v1/forecast', {
-      params: {
-        latitude: koreaWeatherGrid.map((point) => point.latitude).join(','),
-        longitude: koreaWeatherGrid.map((point) => point.longitude).join(','),
-        current:
-          'temperature_2m,precipitation,rain,showers,snowfall,weather_code,cloud_cover,wind_speed_10m',
-        timezone: 'Asia/Seoul',
-        forecast_days: 1,
-      },
-    })
-    const responses = Array.isArray(response.data) ? response.data : [response.data]
-    if (responses.length !== koreaWeatherGrid.length) {
+    const batchSize = 36
+    const batches = Array.from(
+      { length: Math.ceil(koreaWeatherGrid.length / batchSize) },
+      (_, index) => koreaWeatherGrid.slice(index * batchSize, (index + 1) * batchSize),
+    )
+    const batchResults = await Promise.allSettled(
+      batches.map(async (points) => {
+        const response = await openMeteoApi.get('/v1/forecast', {
+          params: {
+            latitude: points.map((point) => point.latitude).join(','),
+            longitude: points.map((point) => point.longitude).join(','),
+            current:
+              'temperature_2m,precipitation,rain,showers,snowfall,weather_code,cloud_cover,wind_speed_10m',
+            timezone: 'Asia/Seoul',
+            forecast_days: 1,
+          },
+        })
+        const responses = Array.isArray(response.data) ? response.data : [response.data]
+        if (responses.length !== points.length) {
+          throw new LiveWeatherApiError('WEATHER_GRID_INCOMPLETE')
+        }
+        return points.map((point, index) => normalizeWeatherGridPoint(point, responses[index]))
+      }),
+    )
+    const points = batchResults.flatMap((result) =>
+      result.status === 'fulfilled' ? result.value : [],
+    )
+    if (!points.length) {
       throw new LiveWeatherApiError('WEATHER_GRID_INCOMPLETE')
     }
 
     const value = {
       source: 'Open-Meteo',
       fetchedAt: new Date().toISOString(),
-      points: koreaWeatherGrid.map((point, index) =>
-        normalizeWeatherGridPoint(point, responses[index]),
-      ),
+      points,
+      totalPointCount: koreaWeatherGrid.length,
+      partial: points.length !== koreaWeatherGrid.length,
       cacheStatus: 'fresh',
     }
     weatherGridCache = { savedAt: Date.now(), value }
