@@ -9,6 +9,7 @@ import RecommendationHero from '../components/planner/RecommendationHero.vue'
 import { useTripPlanner } from '../composables/useTripPlanner'
 import { findActivity } from '../data/activities'
 import { weatherCities } from '../data/weatherCities'
+import { requestKoreaWeatherGrid } from '../services/weatherApi'
 import { useConfigStore } from '../stores/configStore'
 
 const router = useRouter()
@@ -37,6 +38,10 @@ const maximumDate = new Date()
 maximumDate.setDate(maximumDate.getDate() + 4)
 const maxDate = toLocalInputValue(maximumDate)
 const resultFeedback = ref(null)
+const weatherGrid = ref([])
+const weatherGridStatus = ref('loading')
+const weatherGridError = ref('')
+const activeMapMode = ref('route')
 
 const origin = computed(() => weatherCities.find((city) => city.id === originId.value))
 const activity = computed(() => findActivity(activityId.value))
@@ -64,7 +69,7 @@ async function submitPlanner(focusResult = true) {
     departureAt: new Date(departureAt.value),
     maxTravelMinutes: maxTravelMinutes.value,
   })
-  if (planner.bestRecommendation.value) {
+  if (planner.bestRecommendation.value && activeMapMode.value === 'route') {
     configStore.setWeatherEffect(
       planner.bestRecommendation.value.city.name,
       planner.bestRecommendation.value.weather,
@@ -73,6 +78,30 @@ async function submitPlanner(focusResult = true) {
   if (focusResult) {
     await nextTick()
     resultFeedback.value?.focus()
+  }
+}
+
+async function loadWeatherGrid(force = false) {
+  weatherGridStatus.value = 'loading'
+  weatherGridError.value = ''
+  try {
+    const result = await requestKoreaWeatherGrid({ force })
+    weatherGrid.value = result.points
+    weatherGridStatus.value = 'success'
+  } catch {
+    weatherGridStatus.value = 'error'
+    weatherGridError.value = '현재 기상 지점 데이터를 불러오지 못했습니다.'
+  }
+}
+
+function handleMapModeChange(mode) {
+  activeMapMode.value = mode
+  const recommendation = planner.bestRecommendation.value
+  if (mode === 'route' && recommendation) {
+    configStore.setWeatherEffect(recommendation.city.name, recommendation.weather)
+  } else {
+    // 여러 지역을 함께 볼 때는 한 도시의 화면 효과가 지도 의미를 가리지 않게 비웁니다.
+    configStore.clearWeatherEffect()
   }
 }
 
@@ -92,7 +121,10 @@ watch([originId, activityId, maxTravelMinutes], () => {
   })
 })
 
-onMounted(() => submitPlanner(false))
+onMounted(() => {
+  loadWeatherGrid()
+  submitPlanner(false)
+})
 </script>
 
 <template>
@@ -170,6 +202,11 @@ onMounted(() => submitPlanner(false))
             :origin="origin"
             :destination="planner.bestRecommendation.value.city"
             :route="planner.bestRecommendation.value.route"
+            :weather-grid="weatherGrid"
+            :weather-grid-status="weatherGridStatus"
+            :weather-grid-error="weatherGridError"
+            @mode-change="handleMapModeChange"
+            @retry-weather-grid="loadWeatherGrid(true)"
           />
           <template #fallback>
             <div class="loading-panel" role="status">경로 지도를 준비하고 있습니다.</div>

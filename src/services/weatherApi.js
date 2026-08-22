@@ -1,11 +1,14 @@
 import axios from 'axios'
 
+import { koreaWeatherGrid } from '../data/koreaWeatherGrid'
+
 const openWeatherApi = axios.create({ baseURL: 'https://api.openweathermap.org', timeout: 10000 })
 const openMeteoApi = axios.create({ baseURL: 'https://api.open-meteo.com', timeout: 10000 })
 const sunTimesApi = axios.create({ baseURL: 'https://api.sunrisesunset.io', timeout: 10000 })
 
 const apiKey = import.meta.env.VITE_OPENWEATHER_API_KEY
 const weatherCache = new Map()
+let weatherGridCache = null
 const CACHE_TIME = 10 * 60 * 1000
 
 const openMeteoConditions = {
@@ -18,19 +21,30 @@ const openMeteoConditions = {
   51: '약한 이슬비',
   53: '이슬비',
   55: '강한 이슬비',
+  56: '약한 어는 이슬비',
+  57: '강한 어는 이슬비',
   61: '약한 비',
   63: '비',
   65: '강한 비',
+  66: '약한 어는 비',
+  67: '강한 어는 비',
   71: '약한 눈',
   73: '눈',
   75: '강한 눈',
+  77: '싸락눈',
   80: '약한 소나기',
   81: '소나기',
   82: '강한 소나기',
+  85: '약한 눈 소나기',
+  86: '강한 눈 소나기',
   95: '뇌우',
   96: '우박을 동반한 뇌우',
   99: '강한 우박과 뇌우',
 }
+
+const rainWeatherCodes = new Set([51, 53, 55, 56, 57, 61, 63, 65, 66, 67, 80, 81, 82, 95, 96, 99])
+const snowWeatherCodes = new Set([71, 73, 75, 77, 85, 86])
+const fogWeatherCodes = new Set([45, 48])
 
 export class LiveWeatherApiError extends Error {
   constructor(code) {
@@ -159,6 +173,81 @@ export async function requestWeatherBundle(city, { force = false } = {}) {
       throw new LiveWeatherApiError('INVALID_API_KEY')
     }
     throw new LiveWeatherApiError('WEATHER_REQUEST_FAILED')
+  }
+}
+
+function normalizeWeatherGridPoint(point, response) {
+  const current = response.current ?? {}
+  const weatherCode = current.weather_code
+  const rainAmount = Number(((current.rain ?? 0) + (current.showers ?? 0)).toFixed(1))
+  const snowfall = Number((current.snowfall ?? 0).toFixed(1))
+  const cloudCover = Math.round(current.cloud_cover ?? 0)
+  const isRaining = rainAmount > 0 || rainWeatherCodes.has(weatherCode)
+  const isSnowing = snowfall > 0 || snowWeatherCodes.has(weatherCode)
+  const isFoggy = fogWeatherCodes.has(weatherCode)
+  const isCloudy =
+    cloudCover >= 65 || weatherCode === 2 || weatherCode === 3 || isFoggy || isRaining || isSnowing
+  const kind = isRaining
+    ? 'rain'
+    : isSnowing
+      ? 'snow'
+      : isFoggy
+        ? 'fog'
+        : isCloudy
+          ? 'cloud'
+          : 'clear'
+
+  return {
+    ...point,
+    time: current.time,
+    temperature: current.temperature_2m,
+    condition: openMeteoConditions[weatherCode] ?? '날씨 변화',
+    weatherCode,
+    precipitation: Number((current.precipitation ?? 0).toFixed(1)),
+    rainAmount,
+    snowfall,
+    cloudCover,
+    windSpeed: Number(((current.wind_speed_10m ?? 0) / 3.6).toFixed(1)),
+    isRaining,
+    isCloudy,
+    kind,
+  }
+}
+
+export async function requestKoreaWeatherGrid({ force = false } = {}) {
+  if (!force && weatherGridCache && Date.now() - weatherGridCache.savedAt < CACHE_TIME) {
+    return { ...weatherGridCache.value, cacheStatus: 'cached' }
+  }
+
+  try {
+    const response = await openMeteoApi.get('/v1/forecast', {
+      params: {
+        latitude: koreaWeatherGrid.map((point) => point.latitude).join(','),
+        longitude: koreaWeatherGrid.map((point) => point.longitude).join(','),
+        current:
+          'temperature_2m,precipitation,rain,showers,snowfall,weather_code,cloud_cover,wind_speed_10m',
+        timezone: 'Asia/Seoul',
+        forecast_days: 1,
+      },
+    })
+    const responses = Array.isArray(response.data) ? response.data : [response.data]
+    if (responses.length !== koreaWeatherGrid.length) {
+      throw new LiveWeatherApiError('WEATHER_GRID_INCOMPLETE')
+    }
+
+    const value = {
+      source: 'Open-Meteo',
+      fetchedAt: new Date().toISOString(),
+      points: koreaWeatherGrid.map((point, index) =>
+        normalizeWeatherGridPoint(point, responses[index]),
+      ),
+      cacheStatus: 'fresh',
+    }
+    weatherGridCache = { savedAt: Date.now(), value }
+    return value
+  } catch (error) {
+    if (error instanceof LiveWeatherApiError) throw error
+    throw new LiveWeatherApiError('WEATHER_GRID_REQUEST_FAILED')
   }
 }
 
