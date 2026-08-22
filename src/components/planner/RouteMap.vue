@@ -338,15 +338,17 @@ function rebuildWeatherMotionMarkers() {
 }
 
 function syncWeatherMotionMarkers() {
-  const enabled = configStore.mapWeatherMotionEnabled && mapMode.value !== 'route'
+  const enabled = configStore.mapWeatherMotionEnabled
   weatherMotionMarkers.forEach(({ element, point }) => {
     const visible =
       enabled &&
-      (mapMode.value === 'weather' ||
+      (mapMode.value === 'route' ||
+        mapMode.value === 'weather' ||
         (mapMode.value === 'rain' && point.isRaining) ||
         (mapMode.value === 'cloud' && point.isCloudy))
     const effectKind =
-      mapMode.value === 'rain' || (mapMode.value === 'weather' && point.isRaining)
+      mapMode.value === 'rain' ||
+      ((mapMode.value === 'route' || mapMode.value === 'weather') && point.isRaining)
         ? 'rain'
         : 'cloud'
     element.classList.toggle('is-visible', visible)
@@ -646,7 +648,7 @@ onBeforeUnmount(() => {
     <div class="map-frame">
       <div ref="mapContainer" class="map-canvas" role="region" :aria-label="mapAriaLabel"></div>
       <button
-        v-if="mapStatus === 'ready' && mapMode !== 'route'"
+        v-if="mapStatus === 'ready'"
         class="map-motion-toggle"
         type="button"
         :aria-pressed="configStore.mapWeatherMotionEnabled"
@@ -676,7 +678,9 @@ onBeforeUnmount(() => {
         <span><i class="legend-clear"></i>맑음</span>
       </div>
       <p class="map-caption">
-        <template v-if="mapMode === 'route'"> 3D 건물과 이동선을 함께 확인합니다. </template>
+        <template v-if="mapMode === 'route'">
+          3D 건물과 이동선을 함께 확인합니다. 날씨 모션은 현재 기상 지점을 기준으로 표시합니다.
+        </template>
         <template v-else>
           Open-Meteo 현재 모델값을 지점별로 표시하며 기상 레이더 경계는 아닙니다.
           {{ weatherUpdatedAt ? `${weatherUpdatedAt} 기준` : '' }}
