@@ -27,7 +27,7 @@ const temperatureText = computed(() =>
     <span class="rank">0{{ rank }}</span>
     <span class="candidate-main">
       <span class="region">{{ item.city.region }}</span>
-      <strong>{{ item.city.name }} · {{ item.city.place }}</strong>
+      <strong>{{ item.city.name }} · {{ item.activityPlace.name }}</strong>
       <span class="weather">
         {{ item.weather.condition }} · {{ temperatureText }} · 비
         {{ item.weather.precipitationProbability }}%

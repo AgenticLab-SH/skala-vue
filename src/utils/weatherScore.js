@@ -38,17 +38,3 @@ export function getScoreLabel(score) {
   if (score >= 55) return '조금 아쉬움'
   return '계획 변경 권장'
 }
-
-export function explainScore(weather, scoreResult) {
-  const reasons = []
-  if (weather.precipitationProbability <= 20) reasons.push('비 걱정이 적습니다')
-  else if (weather.precipitationProbability >= 60) reasons.push('비를 만날 가능성이 큽니다')
-
-  if (scoreResult.scores.temperature >= 90) reasons.push('활동하기 편한 기온입니다')
-  else reasons.push('기온에 맞는 준비가 필요합니다')
-
-  if (scoreResult.scores.wind < 70) reasons.push('바람이 활동에 방해될 수 있습니다')
-  else if (weather.windSpeed <= 5) reasons.push('바람이 강하지 않습니다')
-
-  return reasons.slice(0, 3)
-}

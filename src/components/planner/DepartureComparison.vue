@@ -27,7 +27,6 @@ function temperatureText(value) {
     <div class="section-heading">
       <div>
         <h2>경로보다 시간을 바꾸는 게 나을까요?</h2>
-        <span>같은 목적지의 도착 시각별 예보를 다시 계산했습니다.</span>
       </div>
     </div>
 
@@ -77,21 +76,13 @@ function temperatureText(value) {
   margin-bottom: 24px;
 }
 
-.section-heading h2,
-.section-heading span {
+.section-heading h2 {
   margin: 0;
 }
 
 .section-heading h2 {
   font-size: 22px;
   letter-spacing: -0.04em;
-}
-
-.section-heading span {
-  display: block;
-  margin-top: 5px;
-  color: var(--muted);
-  font-size: 14px;
 }
 
 .time-grid {

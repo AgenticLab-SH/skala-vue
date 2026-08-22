@@ -1,9 +1,10 @@
 import { computed, ref } from 'vue'
 
+import { getActivityPlace, supportsActivity } from '../data/activityPlaces'
 import { weatherCities } from '../data/weatherCities'
 import { estimateTravel, requestDrivingRoute } from '../services/routeApi'
 import { findNearestForecast, requestWeatherBundle } from '../services/weatherApi'
-import { calculateActivityScore, explainScore } from '../utils/weatherScore'
+import { calculateActivityScore } from '../utils/weatherScore'
 
 function addMinutes(date, minutes) {
   return new Date(new Date(date).getTime() + minutes * 60 * 1000)
@@ -13,6 +14,8 @@ function buildRecommendation(city, route, bundle, departureAt, activityId, maxTr
   const arrivalAt = addMinutes(departureAt, route.minutes)
   const weather = findNearestForecast(bundle, arrivalAt) ?? bundle.current
   const scoreResult = calculateActivityScore(weather, activityId)
+  const activityPlace = getActivityPlace(city, activityId)
+  const combinedScore = Math.round(scoreResult.total * 0.82 + activityPlace.fit * 0.18)
   const travelPenalty = Math.max(0, Math.round((route.minutes / maxTravelMinutes - 0.75) * 12))
 
   return {
@@ -20,10 +23,12 @@ function buildRecommendation(city, route, bundle, departureAt, activityId, maxTr
     route,
     bundle,
     weather,
+    activityPlace,
     arrivalAt,
-    score: Math.max(0, scoreResult.total - travelPenalty),
+    score: Math.max(0, combinedScore - travelPenalty),
+    weatherScore: scoreResult.total,
+    placeScore: activityPlace.fit,
     scoreDetails: scoreResult.scores,
-    reasons: explainScore(weather, scoreResult),
   }
 }
 
@@ -36,7 +41,6 @@ export function useTripPlanner() {
   const failedCityCount = ref(0)
 
   const bestRecommendation = computed(() => recommendations.value[0] ?? null)
-  const dataSource = computed(() => bestRecommendation.value?.bundle.source ?? '')
 
   async function runPlanner({ originId, activityId, departureAt, maxTravelMinutes }) {
     const runId = ++activeRunId
@@ -50,13 +54,13 @@ export function useTripPlanner() {
     failedCityCount.value = 0
 
     const candidates = weatherCities
-      .filter((city) => city.id !== origin.id)
+      .filter((city) => city.id !== origin.id && supportsActivity(city, activityId))
       .map((city) => ({ city, route: estimateTravel(origin, city) }))
       .filter(({ route }) => route.minutes <= maxTravelMinutes * 1.15)
 
     if (!candidates.length) {
-      status.value = 'error'
-      errorMessage.value = '이동 가능 시간을 조금 늘리면 비교할 수 있는 도시가 생깁니다.'
+      status.value = 'empty'
+      errorMessage.value = '이 활동을 할 장소가 이동 시간 안에 없습니다.'
       return
     }
 
@@ -134,7 +138,6 @@ export function useTripPlanner() {
     timeAlternatives,
     failedCityCount,
     bestRecommendation,
-    dataSource,
     runPlanner,
   }
 }

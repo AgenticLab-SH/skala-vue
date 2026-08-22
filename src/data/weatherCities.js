@@ -39,6 +39,5 @@ export const weatherCities = Object.entries(plannerCityDetails).map(([id, detail
     ...region,
     ...details,
     place: region.spots[0].name,
-    activityNote: `${region.spots.map((spot) => spot.name).join(', ')} 중 날씨에 맞는 곳을 골라볼 수 있습니다.`,
   }
 })

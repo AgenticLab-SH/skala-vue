@@ -45,16 +45,6 @@ const activeMapMode = ref('route')
 
 const origin = computed(() => weatherCities.find((city) => city.id === originId.value))
 const activity = computed(() => findActivity(activityId.value))
-const resultFreshness = computed(() => {
-  const bundle = planner.bestRecommendation.value?.bundle
-  if (!bundle?.fetchedAt) return ''
-  const time = new Intl.DateTimeFormat('ko-KR', {
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false,
-  }).format(new Date(bundle.fetchedAt))
-  return `${time} ${bundle.cacheStatus === 'cached' ? '캐시 확인' : '갱신'}`
-})
 
 async function submitPlanner(focusResult = true) {
   configStore.clearWeatherEffect()
@@ -130,11 +120,9 @@ onMounted(() => {
 <template>
   <div class="home-view">
     <section class="hero-copy">
-      <p class="eyebrow">날씨를 보고 움직이는 방법</p>
-      <h1>도착할 때<br />맑은 곳을 찾습니다.</h1>
+      <h1>날씨가 맞는<br />활동 장소를 찾습니다.</h1>
       <div class="hero-description">
-        <p>출발 시각과 활동을 고르면 이동 가능한 도시의 도착 예보를 비교합니다.</p>
-        <p class="data-note">최대 5일 예보 · 이동 시간 반영</p>
+        <p>활동과 출발 시간을 고르면 갈 수 있는 장소의 도착 예보를 비교합니다.</p>
       </div>
     </section>
 
@@ -182,11 +170,7 @@ onMounted(() => {
       <template v-else-if="planner.bestRecommendation.value">
         <div ref="resultFeedback" class="result-heading" tabindex="-1">
           <div>
-            <h2>추천 목적지</h2>
-            <span>
-              {{ origin.name }} 출발 · {{ activity.label }} · {{ planner.dataSource.value }} 예보 ·
-              {{ resultFreshness }}
-            </span>
+            <h2>추천 결과</h2>
           </div>
         </div>
 
@@ -216,7 +200,7 @@ onMounted(() => {
         <div v-if="planner.recommendations.value.length > 1" class="candidate-list">
           <div class="candidate-heading">
             <h3>다른 선택지</h3>
-            <span>점수는 강수 45%, 기온 25%, 바람 20%, 습도 10%를 반영합니다.</span>
+            <span>도착 날씨, 활동 장소와 이동 시간을 함께 비교했습니다.</span>
           </div>
           <CandidateCard
             v-for="(item, index) in planner.recommendations.value.slice(1)"
@@ -255,14 +239,6 @@ onMounted(() => {
   padding: 64px 0 18px;
 }
 
-.eyebrow {
-  margin: 0 0 22px;
-  color: var(--accent);
-  font-size: 12px;
-  font-weight: 800;
-  letter-spacing: 0.12em;
-}
-
 .hero-copy h1 {
   max-width: 850px;
   margin: 0;
@@ -273,9 +249,6 @@ onMounted(() => {
 }
 
 .hero-description {
-  display: flex;
-  justify-content: space-between;
-  gap: 32px;
   margin-top: 30px;
   padding-top: 22px;
   border-top: 1px solid var(--line-strong);
@@ -287,12 +260,6 @@ onMounted(() => {
   color: var(--muted);
   font-size: 17px;
   line-height: 1.75;
-}
-
-.hero-description .data-note {
-  max-width: none;
-  font-size: 13px;
-  white-space: nowrap;
 }
 
 .result-section {
@@ -400,14 +367,9 @@ onMounted(() => {
     padding-top: 38px;
   }
 
-  .hero-description,
   .candidate-heading {
     align-items: flex-start;
     flex-direction: column;
-  }
-
-  .hero-description .data-note {
-    white-space: normal;
   }
 }
 </style>

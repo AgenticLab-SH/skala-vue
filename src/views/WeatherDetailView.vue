@@ -2,8 +2,9 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
+import { findActivity } from '../data/activities'
 import { weatherCities } from '../data/weatherCities'
-import { getWeatherMatchedSpots } from '../data/tourismRegions'
+import { getActivityMatchedSpots } from '../data/tourismRegions'
 import { requestSunTimes, requestWeatherBundle } from '../services/weatherApi'
 import { useConfigStore } from '../stores/configStore'
 import { formatTemperature } from '../utils/temperature'
@@ -18,13 +19,18 @@ const sunTimesStatus = ref('loading')
 const errorMessage = ref('')
 
 const city = computed(() => weatherCities.find((item) => item.id === route.params.cityId))
+const activity = computed(() =>
+  findActivity(route.query.activity ?? configStore.planner.activityId),
+)
 const upcoming = computed(() => {
   if (!bundle.value) return []
   const now = Date.now()
   return bundle.value.forecast.filter((item) => new Date(item.time).getTime() >= now).slice(0, 8)
 })
 const matchedSpots = computed(() =>
-  city.value && bundle.value ? getWeatherMatchedSpots(city.value, bundle.value.current) : [],
+  city.value && bundle.value
+    ? getActivityMatchedSpots(city.value, bundle.value.current, activity.value.id)
+    : [],
 )
 
 function displayTemperature(value) {
@@ -75,7 +81,7 @@ async function loadDetail() {
 }
 
 function planFromCity() {
-  configStore.savePlanner({ originId: city.value.id })
+  configStore.savePlanner({ originId: city.value.id, activityId: activity.value.id })
   router.push({ name: 'weather-home' })
 }
 
@@ -98,7 +104,6 @@ onMounted(loadDetail)
         <div>
           <p>{{ city.region }} · {{ bundle.source }}</p>
           <h1>{{ city.name }}</h1>
-          <span>{{ city.place }}를 기준으로 확인했습니다.</span>
         </div>
         <div class="current-weather">
           <strong>{{ displayTemperature(bundle.current.temperature) }}</strong>
@@ -136,8 +141,7 @@ onMounted(loadDetail)
 
       <section class="forecast-section">
         <div class="section-heading">
-          <p>다음 시간대</p>
-          <span>이동 추천은 아래 예보 중 도착 시각과 가장 가까운 값을 사용합니다.</span>
+          <p>시간대별 예보</p>
         </div>
         <div class="forecast-list">
           <article v-for="item in upcoming" :key="item.time">
@@ -149,8 +153,8 @@ onMounted(loadDetail)
         </div>
       </section>
 
-      <section class="local-note">
-        <p>이 날씨에 가볼 곳</p>
+      <section v-if="matchedSpots.length" class="local-note">
+        <p>추천 장소</p>
         <div>
           <ul>
             <li v-for="spot in matchedSpots" :key="spot.name">
@@ -160,7 +164,7 @@ onMounted(loadDetail)
             </li>
           </ul>
         </div>
-        <button type="button" @click="planFromCity">이 도시로 다시 계획하기 →</button>
+        <button type="button" @click="planFromCity">이 도시에서 다시 출발 →</button>
       </section>
     </template>
   </div>

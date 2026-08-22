@@ -50,7 +50,6 @@ watch(
     <footer class="site-footer">
       <div>
         <strong>구름사이</strong>
-        <p>도착 예보를 비교해 목적지와 경로를 제안합니다.</p>
       </div>
       <div class="footer-links">
         <span>예보와 이동 시간은 계획을 돕는 참고 정보입니다.</span>
@@ -187,7 +186,6 @@ nav a.router-link-exact-active {
   font-size: 17px;
 }
 
-.site-footer p,
 .footer-links span {
   margin: 8px 0 0;
   color: var(--muted);

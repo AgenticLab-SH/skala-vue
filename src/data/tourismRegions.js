@@ -1,3 +1,6 @@
+import { findActivity } from './activities'
+import { getActivityPlace } from './activityPlaces'
+
 const region = (id, name, area, shortRegion, latitude, longitude, spots) => ({
   id,
   name,
@@ -261,16 +264,29 @@ const spotLabels = {
   culture: '문화',
 }
 
-export function getWeatherMatchedSpots(city, weather, limit = 3) {
+function weatherState(weather) {
   const condition = weather?.condition ?? ''
   const rainProbability = weather?.precipitationProbability ?? 0
   const wet = /비|소나기|뇌우|눈/.test(condition) || rainProbability >= 60
   const cloudy = /구름|흐림|안개/.test(condition)
+
+  return { wet, cloudy }
+}
+
+function weatherPriority(weather) {
+  const { wet, cloudy } = weatherState(weather)
   const priority = wet
     ? ['indoor', 'culture', 'outdoor', 'coast', 'mountain']
     : cloudy
       ? ['culture', 'outdoor', 'indoor', 'coast', 'mountain']
       : ['outdoor', 'coast', 'mountain', 'culture', 'indoor']
+
+  return priority
+}
+
+export function getWeatherMatchedSpots(city, weather, limit = 3) {
+  const priority = weatherPriority(weather)
+  const { wet, cloudy } = weatherState(weather)
 
   return [...(city.spots ?? [])]
     .sort((a, b) => priority.indexOf(a.type) - priority.indexOf(b.type))
@@ -286,4 +302,32 @@ export function getWeatherMatchedSpots(city, weather, limit = 3) {
           ? '구름이 있어 천천히 둘러보기 좋습니다.'
           : '맑은 날 풍경을 보기 좋습니다.',
     }))
+}
+
+export function getActivityMatchedSpots(city, weather, activityId) {
+  const activity = findActivity(activityId)
+  const activityPlace = getActivityPlace(city, activity.id)
+  if (!activityPlace) return []
+
+  const { wet } = weatherState(weather)
+  const primary = {
+    ...activityPlace,
+    label: activity.label,
+    reason: wet ? '비가 오면 노면과 운영 여부를 먼저 확인합니다.' : activityPlace.note,
+  }
+  if (!wet) return [primary]
+
+  const alternative = getWeatherMatchedSpots(city, weather, 3).find(
+    (spot) => spot.name !== activityPlace.name && ['indoor', 'culture'].includes(spot.type),
+  )
+  if (!alternative) return [primary]
+
+  return [
+    primary,
+    {
+      ...alternative,
+      label: '비 대안',
+      reason: '비가 이어지면 실내 일정으로 바꿀 수 있습니다.',
+    },
+  ]
 }

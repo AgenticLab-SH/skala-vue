@@ -105,7 +105,6 @@ onMounted(loadCities)
   <div class="city-view">
     <header class="page-intro">
       <h1>도시 날씨</h1>
-      <span>지역별 현재 날씨와 관심 도시를 확인합니다.</span>
     </header>
 
     <div class="search-row">
@@ -181,16 +180,12 @@ onMounted(loadCities)
   font-size: clamp(40px, 7vw, 66px);
   letter-spacing: -0.06em;
 }
-.page-intro span {
-  color: var(--muted);
-}
 .search-row {
   display: grid;
   grid-template-columns: 160px 1fr auto;
   gap: 18px;
   align-items: center;
   margin-top: 48px;
-  padding: 18px 0;
   padding: 18px;
   border: 1px solid var(--line);
   border-radius: 18px;

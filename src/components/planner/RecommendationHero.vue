@@ -2,10 +2,9 @@
 import { computed } from 'vue'
 
 import { findActivity } from '../../data/activities'
-import { getWeatherMatchedSpots } from '../../data/tourismRegions'
+import { getActivityMatchedSpots } from '../../data/tourismRegions'
 import { useConfigStore } from '../../stores/configStore'
 import { formatTemperature } from '../../utils/temperature'
-import { getScoreLabel } from '../../utils/weatherScore'
 
 const props = defineProps({
   recommendation: { type: Object, required: true },
@@ -48,26 +47,26 @@ const temperatureText = computed(() =>
   ),
 )
 const matchedSpots = computed(() =>
-  getWeatherMatchedSpots(props.recommendation.city, props.recommendation.weather),
+  getActivityMatchedSpots(
+    props.recommendation.city,
+    props.recommendation.weather,
+    props.activityId,
+  ),
 )
 </script>
 
 <template>
   <article class="recommendation">
     <div class="recommendation-copy">
-      <p class="eyebrow">가장 나은 선택 · {{ getScoreLabel(recommendation.score) }}</p>
+      <p class="eyebrow">{{ activity.label }} 추천</p>
       <h2>{{ destinationText }} 가는 편이 좋습니다.</h2>
       <p class="lead">
-        {{ originName }}에서 {{ travelText }} 정도 이동하면 <strong>{{ activity.label }}</strong
-        >하기 좋은 날씨를 만날 수 있습니다.
+        {{ originName }}에서 {{ travelText }} 이동 · {{ recommendation.weather.condition }} ·
+        {{ temperatureText }}
       </p>
 
-      <ul class="reason-list">
-        <li v-for="reason in recommendation.reasons" :key="reason">{{ reason }}</li>
-      </ul>
-
       <section class="spot-suggestions" aria-labelledby="spot-suggestions-title">
-        <p id="spot-suggestions-title">이 날씨에 가볼 곳</p>
+        <p id="spot-suggestions-title">추천 장소</p>
         <ul>
           <li v-for="spot in matchedSpots" :key="spot.name">
             <span>{{ spot.label }}</span>
@@ -160,22 +159,6 @@ h2 {
   line-height: 1.7;
 }
 
-.reason-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px 18px;
-  padding: 0;
-  margin: 24px 0;
-  list-style: none;
-}
-
-.reason-list li::before {
-  content: '✓';
-  margin-right: 7px;
-  color: var(--accent);
-  font-weight: 900;
-}
-
 .text-action {
   padding: 0 0 4px;
   border: 0;
@@ -186,7 +169,7 @@ h2 {
 }
 
 .spot-suggestions {
-  margin: 0 0 24px;
+  margin: 24px 0;
 }
 
 .spot-suggestions > p {
