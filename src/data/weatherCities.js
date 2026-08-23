@@ -33,11 +33,36 @@ const plannerCityDetails = {
   },
 }
 
+const administrativeOfficeByCityId = {
+  seoul: { name: '서울시청', latitude: 37.5665, longitude: 126.978 },
+  suwon: { name: '수원시청', latitude: 37.2636, longitude: 127.0286 },
+  changwon: { name: '창원시청', latitude: 35.2281, longitude: 128.6811 },
+  busan: { name: '부산시청', latitude: 35.1796, longitude: 129.0756 },
+  gangneung: { name: '강릉시청', latitude: 37.7519, longitude: 128.8761 },
+  daejeon: { name: '대전시청', latitude: 36.3504, longitude: 127.3845 },
+  jeonju: { name: '전주시청', latitude: 35.8242, longitude: 127.148 },
+  jeju: { name: '제주시청', latitude: 33.4996, longitude: 126.5312 },
+  incheon: { name: '인천시청', latitude: 37.4563, longitude: 126.7052 },
+  chuncheon: { name: '춘천시청', latitude: 37.8813, longitude: 127.7298 },
+  sokcho: { name: '속초시청', latitude: 38.207, longitude: 128.5918 },
+  danyang: { name: '단양군청', latitude: 36.9845, longitude: 128.3656 },
+  boryeong: { name: '보령시청', latitude: 36.3332, longitude: 126.6128 },
+  gwangju: { name: '광주시청', latitude: 35.1595, longitude: 126.8526 },
+  yeosu: { name: '여수시청', latitude: 34.7604, longitude: 127.6622 },
+  daegu: { name: '대구시청', latitude: 35.8714, longitude: 128.6014 },
+  gyeongju: { name: '경주시청', latitude: 35.8562, longitude: 129.2247 },
+  seogwipo: { name: '서귀포시청', latitude: 33.2541, longitude: 126.5601 },
+}
+
 export const weatherCities = Object.entries(plannerCityDetails).map(([id, details]) => {
   const region = tourismRegionById.get(id)
+  const administrativeOffice = administrativeOfficeByCityId[id]
   return {
     ...region,
     ...details,
+    administrativeOffice: administrativeOffice.name,
+    latitude: administrativeOffice.latitude,
+    longitude: administrativeOffice.longitude,
     place: region.spots[0].name,
   }
 })

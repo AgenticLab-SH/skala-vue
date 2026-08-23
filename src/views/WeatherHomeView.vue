@@ -39,6 +39,7 @@ const maximumDate = new Date()
 maximumDate.setDate(maximumDate.getDate() + 4)
 const maxDate = toLocalInputValue(maximumDate)
 const resultFeedback = ref(null)
+const loadingFeedback = ref(null)
 const weatherGrid = ref([])
 const weatherGridStatus = ref('loading')
 const weatherGridError = ref('')
@@ -61,12 +62,20 @@ async function submitPlanner(focusResult = true) {
     activityId: activityId.value,
     maxTravelMinutes: maxTravelMinutes.value,
   })
-  await planner.runPlanner({
+  const plannerRequest = planner.runPlanner({
     originId: originId.value,
     activityId: activityId.value,
     departureAt: new Date(departureAt.value),
     maxTravelMinutes: maxTravelMinutes.value,
   })
+  if (focusResult) {
+    await nextTick()
+    loadingFeedback.value?.scrollIntoView({
+      block: 'center',
+      behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',
+    })
+  }
+  await plannerRequest
   showOriginWeatherEffect()
   if (focusResult) {
     await nextTick()
@@ -134,9 +143,9 @@ onMounted(() => {
 <template>
   <div class="home-view">
     <section class="hero-copy">
-      <h1>날씨가 맞는<br />활동 장소를 찾습니다.</h1>
+      <h1>원하는 활동을<br />선택하세요.</h1>
       <div class="hero-description">
-        <p>활동과 출발 시간을 고르면 갈 수 있는 장소의 도착 예보를 비교합니다.</p>
+        <p>도착 예보를 점검해 날씨에 맞는 경로를 추천해드립니다.</p>
       </div>
     </section>
 
@@ -156,7 +165,7 @@ onMounted(() => {
       aria-live="polite"
       :aria-busy="planner.status.value === 'loading'"
     >
-      <div v-if="planner.status.value === 'loading'" class="loading-panel">
+      <div v-if="planner.status.value === 'loading'" ref="loadingFeedback" class="loading-panel">
         <SearchLoadingState message="도시별 도착 시각을 계산하고 예보를 비교합니다." />
       </div>
 
@@ -226,6 +235,7 @@ onMounted(() => {
           <RouteMap
             :origin="origin"
             :destination="planner.selectedRecommendation.value.city"
+            :route-destination="planner.selectedRecommendation.value.routeDestination"
             :route="planner.selectedRecommendation.value.route"
             :arrival-at="planner.selectedRecommendation.value.arrivalAt"
             :weather-grid="weatherGrid"

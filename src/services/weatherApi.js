@@ -1,6 +1,7 @@
 import axios from 'axios'
 
 import { koreaWeatherGrid } from '../data/koreaWeatherGrid'
+import { normalizeWeatherBundle, normalizeWeatherCondition } from '../utils/weatherCondition'
 
 const openMeteoApi = axios.create({ baseURL: 'https://api.open-meteo.com', timeout: 10000 })
 const sunTimesApi = axios.create({ baseURL: 'https://api.sunrisesunset.io', timeout: 10000 })
@@ -125,6 +126,7 @@ export async function requestWeatherBundle(city, { force = false } = {}) {
       const snapshot = await requestOpenWeatherSnapshot()
       response = snapshot.cities[city.id]
       if (!response) throw new LiveWeatherApiError('OPENWEATHER_CITY_MISSING')
+      response = normalizeWeatherBundle(response)
       fetchedAt = snapshot.generatedAt
     } catch {
       // 스냅샷이 아직 없거나 갱신에 실패해도 추천 흐름은 계속 사용할 수 있게 둡니다.
@@ -253,7 +255,7 @@ export async function requestLiveWeather(cityName) {
     return {
       cityName: bundle.cityName,
       temperature: weather.temperature,
-      condition: weather.condition,
+      condition: normalizeWeatherCondition(weather.condition),
       humidity: weather.humidity,
     }
   } catch (error) {

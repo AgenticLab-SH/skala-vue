@@ -10,7 +10,30 @@ function addMinutes(date, minutes) {
   return new Date(new Date(date).getTime() + minutes * 60 * 1000)
 }
 
-function buildRecommendation(city, route, bundle, departureAt, activityId, maxTravelMinutes) {
+function localActivityDestination(origin, city, activityPlace, activityId) {
+  if (origin.id !== city.id || !activityPlace?.latitude || !activityPlace?.longitude) return city
+  return {
+    ...city,
+    id: `${city.id}-${activityId}`,
+    name: activityPlace.name,
+    latitude: activityPlace.latitude,
+    longitude: activityPlace.longitude,
+  }
+}
+
+function wait(milliseconds) {
+  return new Promise((resolve) => setTimeout(resolve, milliseconds))
+}
+
+function buildRecommendation(
+  city,
+  routeDestination,
+  route,
+  bundle,
+  departureAt,
+  activityId,
+  maxTravelMinutes,
+) {
   const arrivalAt = addMinutes(departureAt, route.minutes)
   const weather = findNearestForecast(bundle, arrivalAt) ?? bundle.current
   const scoreResult = calculateActivityScore(weather, activityId)
@@ -20,6 +43,7 @@ function buildRecommendation(city, route, bundle, departureAt, activityId, maxTr
 
   return {
     city,
+    routeDestination,
     route,
     bundle,
     weather,
@@ -54,10 +78,11 @@ export function useTripPlanner() {
       timeAlternatives.value = []
       return
     }
-    timeAlternatives.value = [0, 180, 360].map((delay) => {
+    timeAlternatives.value = [-180, -120, -60, 60, 120, 180].map((delay) => {
       const changedDeparture = addMinutes(latestInput.departureAt, delay)
       const changed = buildRecommendation(
         recommendation.city,
+        recommendation.routeDestination,
         recommendation.route,
         recommendation.bundle,
         changedDeparture,
@@ -83,6 +108,7 @@ export function useTripPlanner() {
 
   async function runPlanner({ originId, activityId, departureAt, maxTravelMinutes }) {
     const runId = ++activeRunId
+    const loadingStartedAt = Date.now()
     const origin = weatherCities.find((city) => city.id === originId)
     if (!origin) return
 
@@ -96,7 +122,15 @@ export function useTripPlanner() {
 
     const candidates = weatherCities
       .filter((city) => supportsActivity(city, activityId))
-      .map((city) => ({ city, route: estimateTravel(origin, city) }))
+      .map((city) => {
+        const activityPlace = getActivityPlace(city, activityId)
+        const routeDestination = localActivityDestination(origin, city, activityPlace, activityId)
+        return {
+          city,
+          routeDestination,
+          route: estimateTravel(origin, routeDestination),
+        }
+      })
       .filter(({ route }) => route.minutes <= maxTravelMinutes * 1.15)
 
     if (!candidates.length) {
@@ -124,13 +158,16 @@ export function useTripPlanner() {
       return
     }
 
-    const routes = await Promise.all(available.map(({ city }) => requestDrivingRoute(origin, city)))
+    const routes = await Promise.all(
+      available.map(({ routeDestination }) => requestDrivingRoute(origin, routeDestination)),
+    )
     if (runId !== activeRunId) return
 
     recommendations.value = available
       .map((item, index) =>
         buildRecommendation(
           item.city,
+          item.routeDestination,
           routes[index],
           item.bundle,
           departureAt,
@@ -150,6 +187,11 @@ export function useTripPlanner() {
     }
 
     selectRecommendation(best.city.id)
+
+    // 요청이 빠른 경우에도 진행 상태를 알아볼 수 있도록 짧게 유지합니다.
+    const remainingLoadingTime = 1100 - (Date.now() - loadingStartedAt)
+    if (remainingLoadingTime > 0) await wait(remainingLoadingTime)
+    if (runId !== activeRunId) return
 
     status.value = 'success'
   }

@@ -30,7 +30,7 @@ export const activities = [
   {
     id: 'cycling',
     label: '자전거',
-    icon: '◇',
+    icon: '🚲',
     ideal: { minTemp: 8, maxTemp: 27, maxRain: 20, maxWind: 7, maxHumidity: 84 },
     planB: '짧은 산책이나 실내 운동으로 강도를 낮출 수 있습니다.',
   },

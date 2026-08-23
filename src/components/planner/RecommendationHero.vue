@@ -32,12 +32,11 @@ const travelText = computed(() => {
   return hour ? `${hour}시간 ${rest ? `${rest}분` : ''}` : `${rest}분`
 })
 
-const destinationText = computed(() => {
+const destinationSubject = computed(() => {
   const name = props.recommendation.city.name
   const lastCode = name.charCodeAt(name.length - 1) - 0xac00
-  if (lastCode < 0 || lastCode > 11171) return `${name}로`
-  const finalConsonant = lastCode % 28
-  return `${name}${finalConsonant !== 0 && finalConsonant !== 8 ? '으로' : '로'}`
+  if (lastCode < 0 || lastCode > 11171) return `${name}이`
+  return `${name}${lastCode % 28 ? '이' : '가'}`
 })
 const temperatureText = computed(() =>
   formatTemperature(
@@ -45,15 +44,6 @@ const temperatureText = computed(() =>
     configStore.unit,
     configStore.unitSymbol,
   ),
-)
-const weatherUpdatedAt = computed(() =>
-  new Intl.DateTimeFormat('ko-KR', {
-    month: 'numeric',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false,
-  }).format(new Date(props.recommendation.bundle.fetchedAt)),
 )
 const matchedSpots = computed(() =>
   getActivityMatchedSpots(
@@ -68,7 +58,7 @@ const matchedSpots = computed(() =>
   <article class="recommendation">
     <div class="recommendation-copy">
       <p class="eyebrow">{{ activity.label }} 추천</p>
-      <h2>{{ destinationText }} 가는 편이 좋습니다.</h2>
+      <h2>{{ destinationSubject }} 괜찮아 보이네요.</h2>
       <p class="lead">
         {{ originName }}에서 {{ travelText }} 이동 · {{ recommendation.weather.condition }} ·
         {{ temperatureText }}
@@ -91,11 +81,6 @@ const matchedSpots = computed(() =>
     </div>
 
     <div class="score-panel">
-      <p class="score-label">{{ activity.label }} 적합도</p>
-      <p class="score">
-        <strong>{{ recommendation.score }}</strong
-        ><span>/ 100</span>
-      </p>
       <dl>
         <div>
           <dt>도착 예상</dt>
@@ -114,10 +99,6 @@ const matchedSpots = computed(() =>
           <dd>{{ recommendation.weather.precipitationProbability }}%</dd>
         </div>
       </dl>
-      <p class="route-source">
-        {{ recommendation.route.source }} · {{ recommendation.route.distance }}km · 날씨
-        {{ recommendation.bundle.source }} {{ weatherUpdatedAt }} 갱신
-      </p>
     </div>
   </article>
 </template>
@@ -143,9 +124,7 @@ const matchedSpots = computed(() =>
   background: var(--soft);
 }
 
-.eyebrow,
-.score-label,
-.route-source {
+.eyebrow {
   margin: 0;
   color: var(--muted);
   font-size: 12px;
@@ -216,23 +195,6 @@ h2 {
   font-size: 12px;
 }
 
-.score {
-  display: flex;
-  align-items: baseline;
-  margin: 12px 0 30px;
-}
-
-.score strong {
-  font-size: 64px;
-  line-height: 1;
-  letter-spacing: -0.06em;
-}
-
-.score span {
-  margin-left: 6px;
-  color: var(--muted);
-}
-
 dl {
   margin: 0;
 }
@@ -253,12 +215,6 @@ dd {
   margin: 0;
   font-weight: 700;
   text-align: right;
-}
-
-.route-source {
-  margin-top: 18px;
-  font-weight: 500;
-  letter-spacing: 0;
 }
 
 @media (max-width: 760px) {

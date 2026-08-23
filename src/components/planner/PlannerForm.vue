@@ -33,7 +33,6 @@ let guidanceTimer
 const quickTemplates = [
   {
     id: 'seoul-am',
-    label: '가볍게 시작하기',
     city: '서울',
     originId: 'seoul',
     hour: 10,
@@ -42,7 +41,6 @@ const quickTemplates = [
   },
   {
     id: 'changwon-pm',
-    label: '오후 나들이 보기',
     city: '창원',
     originId: 'changwon',
     hour: 13,
@@ -51,7 +49,6 @@ const quickTemplates = [
   },
   {
     id: 'gwangju-evening',
-    label: '저녁 출발 살펴보기',
     city: '광주',
     originId: 'gwangju',
     hour: 19,
@@ -136,8 +133,7 @@ onBeforeUnmount(() => window.clearTimeout(guidanceTimer))
 
     <section class="quick-start" aria-labelledby="quick-start-title">
       <div>
-        <h3 id="quick-start-title">예시로 바로 시작하기</h3>
-        <p>출발 조건이 자동으로 채워집니다. 다음에 하고 싶은 활동만 고르면 됩니다.</p>
+        <h3 id="quick-start-title">사용 예시 템플릿으로 테스트해 보세요!</h3>
       </div>
       <div class="template-list">
         <button
@@ -147,7 +143,6 @@ onBeforeUnmount(() => window.clearTimeout(guidanceTimer))
           type="button"
           @click="applyQuickTemplate(template)"
         >
-          <span class="template-label">{{ template.label }}</span>
           <strong
             >{{ template.city }} · 내일 {{ String(template.hour).padStart(2, '0') }}:00</strong
           >
@@ -309,7 +304,7 @@ onBeforeUnmount(() => window.clearTimeout(guidanceTimer))
 }
 
 .template-list strong {
-  margin-top: 9px;
+  margin-top: 0;
   font-size: 14px;
 }
 
@@ -317,13 +312,6 @@ onBeforeUnmount(() => window.clearTimeout(guidanceTimer))
   margin-top: 4px;
   color: var(--muted);
   font-size: 12px;
-}
-
-.template-list .template-label {
-  margin: 0;
-  color: var(--template-accent);
-  font-size: 11px;
-  font-weight: 800;
 }
 
 .template-list .is-morning {

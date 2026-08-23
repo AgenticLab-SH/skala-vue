@@ -19,6 +19,12 @@ const resources = [
     href: 'https://project-osrm.org/docs/v5.24.0/api/',
   },
   {
+    name: 'OpenStreetMap Nominatim',
+    type: '장소 좌표 확인',
+    use: '활동 장소 이름으로 좌표를 한 번 확인해 정적 데이터로 저장했습니다. 화면을 사용할 때 Nominatim에 반복 요청하지 않습니다.',
+    href: 'https://nominatim.org/release-docs/latest/api/Search/',
+  },
+  {
     name: 'MapLibre GL JS · OpenFreeMap',
     type: '지도·건물 데이터',
     use: '이동선, 기상 지점, 3D 건물과 계산한 건물 그림자를 지도에 표시했습니다.',
@@ -57,7 +63,7 @@ const resources = [
   {
     name: 'Wellcome Animation · Muneeb Ullah',
     type: 'LottieFiles 애니메이션',
-    use: '한 브라우저 탭에서 처음 들어왔을 때만 나타나는 환영 화면에 사용했습니다.',
+    use: '사이트에 들어오거나 새로고침할 때 3초 동안 나타나는 환영 화면에 사용했습니다.',
     href: 'https://lottiefiles.com/free-animation/wellcome-animation-9cXI8Bc0SU',
   },
 ]

@@ -2,6 +2,8 @@ import { mkdir, writeFile } from 'node:fs/promises'
 import { dirname, resolve } from 'node:path'
 import process from 'node:process'
 
+import { normalizeWeatherCondition } from '../src/utils/weatherCondition.js'
+
 const cities = [
   ['seoul', '서울', 37.5665, 126.978],
   ['suwon', '수원', 37.2636, 127.0286],
@@ -27,7 +29,7 @@ function normalizeCurrent(data, nearestForecast) {
   return {
     time: new Date(data.dt * 1000).toISOString(),
     temperature: data.main.temp,
-    condition: data.weather[0]?.description ?? '정보 없음',
+    condition: normalizeWeatherCondition(data.weather[0]?.description),
     humidity: data.main.humidity,
     windSpeed: data.wind.speed,
     precipitationProbability: nearestForecast?.precipitationProbability ?? null,
@@ -38,7 +40,7 @@ function normalizeForecast(item) {
   return {
     time: new Date(item.dt * 1000).toISOString(),
     temperature: item.main.temp,
-    condition: item.weather[0]?.description ?? '정보 없음',
+    condition: normalizeWeatherCondition(item.weather[0]?.description),
     humidity: item.main.humidity,
     windSpeed: item.wind.speed,
     precipitationProbability: Math.round((item.pop ?? 0) * 100),

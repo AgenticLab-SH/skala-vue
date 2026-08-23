@@ -1,3 +1,5 @@
+import { activityPlaceCoordinates } from './activityPlaceCoordinates'
+
 const place = (name, fit, note) => ({ name, fit, note })
 
 // 이동 추천에 쓰는 18개 도시만 활동 장소를 따로 관리합니다.
@@ -133,7 +135,12 @@ export const activityPlacesByCity = {
 
 export function getActivityPlace(cityOrId, activityId) {
   const cityId = typeof cityOrId === 'string' ? cityOrId : cityOrId?.id
-  return activityPlacesByCity[cityId]?.[activityId] ?? null
+  const storedPlace = activityPlacesByCity[cityId]?.[activityId]
+  if (!storedPlace) return null
+  return {
+    ...storedPlace,
+    ...activityPlaceCoordinates[cityId]?.[activityId],
+  }
 }
 
 export function supportsActivity(cityOrId, activityId) {

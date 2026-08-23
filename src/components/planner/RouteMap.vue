@@ -10,6 +10,7 @@ import { chooseShadedRoute, createBuildingShadows } from '../../utils/shadeRoute
 const props = defineProps({
   origin: { type: Object, required: true },
   destination: { type: Object, required: true },
+  routeDestination: { type: Object, default: null },
   route: { type: Object, required: true },
   arrivalAt: { type: [Date, String], required: true },
   weatherGrid: { type: Array, default: () => [] },
@@ -31,16 +32,20 @@ const shadeStatus = ref('idle')
 const shadeMessage = ref('도착 시각의 태양각과 건물 높이로 경로 대안을 비교합니다.')
 const shadeMetrics = ref(null)
 const mapViewport = ref({
-  longitude: props.destination.longitude,
-  latitude: props.destination.latitude,
+  longitude: props.routeDestination?.longitude ?? props.destination.longitude,
+  latitude: props.routeDestination?.latitude ?? props.destination.latitude,
   zoom: 7,
 })
+const mapBearing = ref(0)
+const mapPitch = ref(0)
 let map
 let loadTimer
 let shadeTimer
 let shadeCalculationToken = 0
 let weatherPopup
 let weatherMotionMarkers = []
+
+const destinationPoint = computed(() => props.routeDestination ?? props.destination)
 
 const routeAlternatives = computed(() => {
   const alternatives = props.route.alternatives?.length ? props.route.alternatives : [props.route]
@@ -56,7 +61,7 @@ const coordinates = computed(() => {
   if (activeRoute.value.geometry?.length >= 2) return activeRoute.value.geometry
   return [
     [props.origin.longitude, props.origin.latitude],
-    [props.destination.longitude, props.destination.latitude],
+    [destinationPoint.value.longitude, destinationPoint.value.latitude],
   ]
 })
 
@@ -83,15 +88,18 @@ const pointGeoJson = computed(() => ({
   features: [
     {
       type: 'Feature',
-      properties: { kind: 'origin', label: `출발 · ${props.origin.name}` },
+      properties: {
+        kind: 'origin',
+        label: `출발 · ${props.origin.administrativeOffice ?? props.origin.name}`,
+      },
       geometry: { type: 'Point', coordinates: [props.origin.longitude, props.origin.latitude] },
     },
     {
       type: 'Feature',
-      properties: { kind: 'destination', label: `도착 · ${props.destination.name}` },
+      properties: { kind: 'destination', label: `도착 · ${destinationPoint.value.name}` },
       geometry: {
         type: 'Point',
-        coordinates: [props.destination.longitude, props.destination.latitude],
+        coordinates: [destinationPoint.value.longitude, destinationPoint.value.latitude],
       },
     },
   ],
@@ -311,6 +319,7 @@ function applyMapMode() {
     routeVisible && routeStrategy.value === 'shade' && routeAlternatives.value.length > 1,
   )
   setLayerVisibility('building-shadows', routeVisible && isThreeDimensional.value)
+  setLayerVisibility('building-shadow-outline', routeVisible && isThreeDimensional.value)
   setLayerVisibility('destination-buildings', routeVisible)
   setLayerVisibility(
     'weather-cloud-area',
@@ -641,7 +650,30 @@ function updateMapViewport() {
     latitude: center.lat,
     zoom: map.getZoom(),
   }
+  mapBearing.value = Math.round((map.getBearing() + 360) % 360)
+  mapPitch.value = Math.round(map.getPitch())
   syncWeatherMotionMarkers()
+}
+
+function changeMapBearing(event) {
+  if (!map) return
+  map.setBearing(Number(event.target.value))
+  updateMapViewport()
+}
+
+function changeMapPitch(event) {
+  if (!map) return
+  map.setPitch(Number(event.target.value))
+  updateMapViewport()
+}
+
+function resetMapAngle() {
+  if (!map) return
+  map.easeTo({
+    bearing: 0,
+    pitch: 0,
+    duration: prefersReducedMotion() ? 0 : 300,
+  })
 }
 
 function addBuildingLayer() {
@@ -666,11 +698,11 @@ function addBuildingLayer() {
           ['linear'],
           ['coalesce', ['get', 'render_height'], 8],
           0,
-          '#d7dee5',
+          '#e5e9ed',
           80,
-          '#aebbc8',
+          '#c3cbd3',
           200,
-          '#8697a8',
+          '#a2afbb',
         ],
         'fill-extrusion-height': [
           'interpolate',
@@ -682,7 +714,7 @@ function addBuildingLayer() {
           ['coalesce', ['get', 'render_height'], 8],
         ],
         'fill-extrusion-base': ['coalesce', ['get', 'render_min_height'], 0],
-        'fill-extrusion-opacity': 0.82,
+        'fill-extrusion-opacity': 0.76,
         'fill-extrusion-vertical-gradient': true,
       },
     },
@@ -701,19 +733,33 @@ function addBuildingLayer() {
       layout: { visibility: 'none' },
       paint: {
         'fill-antialias': true,
-        'fill-color': '#25364a',
+        'fill-color': '#405b76',
         'fill-opacity': [
           'interpolate',
           ['linear'],
           ['get', 'shadowLength'],
           0,
-          0.5,
+          0.64,
           80,
-          0.58,
+          0.7,
           240,
-          0.66,
+          0.76,
         ],
-        'fill-outline-color': 'rgba(18, 30, 42, 0.72)',
+        'fill-outline-color': 'rgba(25, 48, 70, 0.9)',
+      },
+    },
+    'destination-buildings',
+  )
+  map.addLayer(
+    {
+      id: 'building-shadow-outline',
+      type: 'line',
+      source: 'building-shadows',
+      layout: { visibility: 'none' },
+      paint: {
+        'line-color': 'rgba(23, 47, 70, 0.92)',
+        'line-width': 1.35,
+        'line-opacity': 0.9,
       },
     },
     'destination-buildings',
@@ -778,8 +824,8 @@ function calculateBuildingShadows(token, shouldChooseRoute, loadAttempt = 0) {
   // 이 프로젝트의 SunCalc 2.x는 고도와 북쪽 기준 방위각을 도 단위로 반환합니다.
   const sun = getPosition(
     new Date(props.arrivalAt),
-    props.destination.latitude,
-    props.destination.longitude,
+    destinationPoint.value.latitude,
+    destinationPoint.value.longitude,
   )
   if (!Number.isFinite(sun.altitude) || sun.altitude <= 0) {
     if (shouldChooseRoute) activeRouteIndex.value = 0
@@ -836,7 +882,7 @@ function calculateBuildingShadows(token, shouldChooseRoute, loadAttempt = 0) {
     shadeMessage.value =
       routeAlternatives.value.length > 1
         ? `경로 ${routeAlternatives.value.length}개를 비교해 그늘과 이동 시간의 균형이 나은 경로를 표시합니다.`
-        : '건물 그림자는 표시했지만 경로 대안이 없어 현재 경로를 유지합니다.'
+        : '건물 그림자를 표시했습니다. 비교할 다른 경로가 없어 빠른 경로를 유지합니다.'
   } else {
     shadeMessage.value = '도착 시각의 건물 그림자를 3D 지도에 표시합니다.'
   }
@@ -870,7 +916,7 @@ function useShadedRoute() {
   applyMapMode()
   syncWeatherMotionMarkers()
   map.easeTo({
-    center: [props.destination.longitude, props.destination.latitude],
+    center: [destinationPoint.value.longitude, destinationPoint.value.latitude],
     zoom: 16.4,
     pitch: 50,
     bearing: -18,
@@ -948,7 +994,7 @@ function showDestinationIn3d() {
   applyMapMode()
   syncWeatherMotionMarkers()
   map.easeTo({
-    center: [props.destination.longitude, props.destination.latitude],
+    center: [destinationPoint.value.longitude, destinationPoint.value.latitude],
     zoom: 16.2,
     pitch: 52,
     bearing: -18,
@@ -1061,13 +1107,16 @@ onMounted(async () => {
     map = new maplibregl.Map({
       container: mapContainer.value,
       style: 'https://tiles.openfreemap.org/styles/positron',
-      center: [props.destination.longitude, props.destination.latitude],
+      center: [destinationPoint.value.longitude, destinationPoint.value.latitude],
       zoom: 7,
       cooperativeGestures: true,
       attributionControl: true,
       canvasContextAttributes: { antialias: true },
     })
-    map.addControl(new maplibregl.NavigationControl({ visualizePitch: true }), 'bottom-right')
+    map.addControl(
+      new maplibregl.NavigationControl({ showCompass: false, visualizePitch: true }),
+      'bottom-right',
+    )
     loadTimer = window.setTimeout(() => {
       if (mapStatus.value === 'loading') {
         mapStatus.value = 'error'
@@ -1109,7 +1158,10 @@ onMounted(async () => {
   }
 })
 
-watch([() => props.route, () => props.destination.id], updateMapData)
+watch(
+  [() => props.route, () => props.destination.id, () => props.routeDestination?.id],
+  updateMapData,
+)
 watch(activeRouteIndex, updateRouteSources)
 watch(weatherGeoJson, () => {
   updateWeatherData()
@@ -1225,10 +1277,6 @@ onBeforeUnmount(() => {
             <dd>{{ shadeMetrics.altitude }}°</dd>
           </div>
           <div>
-            <dt>건물</dt>
-            <dd>{{ shadeMetrics.buildingCount }}개</dd>
-          </div>
-          <div>
             <dt>표시 구간 그늘</dt>
             <dd>{{ shadeMetrics.shadePercent }}%</dd>
           </div>
@@ -1250,6 +1298,50 @@ onBeforeUnmount(() => {
 
     <div class="map-frame">
       <div ref="mapContainer" class="map-canvas" role="region" :aria-label="mapAriaLabel"></div>
+      <details v-if="mapStatus === 'ready'" class="map-angle-control">
+        <summary>
+          <i
+            class="compass-needle"
+            :style="{ transform: `rotate(${-mapBearing}deg)` }"
+            aria-hidden="true"
+            >↑</i
+          >
+          <span>
+            <strong>지도 각도</strong>
+            <small>회전 {{ mapBearing }}° · 기울기 {{ mapPitch }}°</small>
+          </span>
+          <b aria-hidden="true">⌄</b>
+        </summary>
+        <div class="angle-fields">
+          <label>
+            <span>나침반 회전</span>
+            <output>{{ mapBearing }}°</output>
+            <input
+              type="range"
+              aria-label="나침반 회전"
+              min="0"
+              max="359"
+              step="1"
+              :value="mapBearing"
+              @input="changeMapBearing"
+            />
+          </label>
+          <label>
+            <span>지도 기울기</span>
+            <output>{{ mapPitch }}°</output>
+            <input
+              type="range"
+              aria-label="지도 기울기"
+              min="0"
+              max="65"
+              step="1"
+              :value="mapPitch"
+              @input="changeMapPitch"
+            />
+          </label>
+          <button type="button" @click="resetMapAngle">북쪽 상단 보기</button>
+        </div>
+      </details>
       <div
         v-if="mapMode === 'route' && isThreeDimensional"
         class="map-shadow-legend"
@@ -1300,8 +1392,7 @@ onBeforeUnmount(() => {
       <p class="map-caption">
         <template v-if="mapMode === 'route'">
           <span v-if="routeStrategy === 'shade'">
-            도착지 주변 지도에 로드된 건물과 경로 대안을 비교한 결과이며 보행 안전을 보장하지
-            않습니다.
+            그림자와 경로 비교는 참고 정보이며 보행 안전을 보장하지 않습니다.
           </span>
           <span v-else-if="isThreeDimensional">
             도착 시각의 태양각과 지도 건물 높이로 계산한 그림자를 3D 건물과 함께 표시합니다.
@@ -1710,6 +1801,115 @@ onBeforeUnmount(() => {
   inset: 0;
 }
 
+.map-angle-control {
+  position: absolute;
+  z-index: 5;
+  top: 64px;
+  right: 12px;
+  width: 212px;
+  border: 1px solid rgba(255, 255, 255, 0.84);
+  border-radius: 14px;
+  background: rgba(247, 250, 253, 0.9);
+  box-shadow: 0 10px 28px rgba(20, 34, 49, 0.16);
+  color: #273441;
+  backdrop-filter: blur(20px) saturate(155%);
+  -webkit-backdrop-filter: blur(20px) saturate(155%);
+}
+
+.map-angle-control summary {
+  display: grid;
+  min-height: 44px;
+  grid-template-columns: 28px 1fr auto;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 10px;
+  cursor: pointer;
+  list-style: none;
+}
+
+.map-angle-control summary::-webkit-details-marker {
+  display: none;
+}
+
+.map-angle-control summary span {
+  display: grid;
+  gap: 1px;
+}
+
+.map-angle-control summary strong {
+  font-size: 12px;
+}
+
+.map-angle-control summary small {
+  color: var(--muted);
+  font-size: 9px;
+  font-variant-numeric: tabular-nums;
+}
+
+.map-angle-control summary b {
+  font-size: 12px;
+  transition: transform 160ms ease-out;
+}
+
+.map-angle-control[open] {
+  width: min(280px, calc(100% - 24px));
+}
+
+.map-angle-control[open] summary b {
+  transform: rotate(180deg);
+}
+
+.compass-needle {
+  display: grid;
+  width: 27px;
+  height: 27px;
+  border: 1px solid var(--line-strong);
+  border-radius: 50%;
+  place-items: center;
+  background: #fff;
+  color: #d6534d;
+  font-size: 17px;
+  font-style: normal;
+  transition: transform 120ms ease-out;
+}
+
+.angle-fields {
+  display: grid;
+  gap: 12px;
+  padding: 10px;
+  border-top: 1px solid var(--line);
+}
+
+.angle-fields label {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 5px 10px;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.angle-fields output {
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.angle-fields input {
+  width: 100%;
+  grid-column: 1 / -1;
+  accent-color: var(--accent);
+}
+
+.angle-fields button {
+  min-height: 40px;
+  border: 1px solid var(--line-strong);
+  border-radius: 10px;
+  background: #fff;
+  color: var(--ink);
+  font-size: 11px;
+  font-weight: 800;
+}
+
 .map-shadow-legend {
   position: absolute;
   z-index: 4;
@@ -1885,9 +2085,10 @@ onBeforeUnmount(() => {
 .map-caption {
   position: absolute;
   z-index: 2;
-  right: 14px;
+  left: 50%;
   bottom: 14px;
-  max-width: min(470px, calc(100% - 28px));
+  width: max-content;
+  max-width: calc(100% - 28px);
   padding: 9px 13px;
   margin: 0;
   border: 1px solid rgba(255, 255, 255, 0.78);
@@ -1897,6 +2098,8 @@ onBeforeUnmount(() => {
   color: #3c4854;
   font-size: 12px;
   line-height: 1.5;
+  text-align: center;
+  transform: translateX(-50%);
   backdrop-filter: blur(18px) saturate(140%);
   -webkit-backdrop-filter: blur(18px) saturate(140%);
 }
@@ -2413,6 +2616,7 @@ onBeforeUnmount(() => {
   .map-view-toggle,
   .map-mode-controls button,
   .map-motion-toggle,
+  .map-angle-control,
   .map-caption,
   .weather-legend,
   :deep(.maplibregl-ctrl-group),
@@ -2461,9 +2665,14 @@ onBeforeUnmount(() => {
   }
 
   .map-caption {
-    right: 10px;
+    left: 50%;
     bottom: 10px;
     max-width: calc(100% - 20px);
+  }
+
+  .map-angle-control {
+    top: 108px;
+    right: 10px;
   }
 
   .map-motion-toggle {
@@ -2539,6 +2748,8 @@ onBeforeUnmount(() => {
   .map-motion-toggle,
   .motion-switch,
   .motion-switch i,
+  .compass-needle,
+  .map-angle-control summary b,
   .verification-disclosure i,
   :global(.weather-motion-cell) {
     transition: none;

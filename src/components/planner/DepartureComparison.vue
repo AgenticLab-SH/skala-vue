@@ -21,14 +21,19 @@ function formatTime(date) {
 function temperatureText(value) {
   return formatTemperature(value, configStore.unit, configStore.unitSymbol)
 }
+
+function delayLabel(delay) {
+  const hours = Math.abs(delay) / 60
+  return delay < 0 ? `${hours}시간 빠르게` : `${hours}시간 늦게`
+}
 </script>
 
 <template>
   <section class="departure-comparison">
     <div class="section-heading">
       <div>
-        <h2>출발 시간을 바꿔 볼까요?</h2>
-        <p>같은 목적지의 도착 날씨를 비교했습니다. 시간을 누르면 그 조건으로 다시 추천합니다.</p>
+        <h2>출발 시간을 앞뒤로 비교해 보세요.</h2>
+        <p>한 시간 간격으로 앞선 시간 3개와 늦은 시간 3개를 비교했습니다.</p>
       </div>
     </div>
 
@@ -41,28 +46,15 @@ function temperatureText(value) {
         :aria-label="`${formatTime(item.departureAt)} 출발 조건으로 다시 추천`"
         @click="$emit('select', item)"
       >
-        <p>{{ item.delay === 0 ? '선택한 시간' : `${item.delay / 60}시간 늦게` }}</p>
+        <p>{{ delayLabel(item.delay) }}</p>
         <strong>{{ formatTime(item.departureAt) }} 출발</strong>
-        <dl>
-          <div>
-            <dt>도착</dt>
-            <dd>{{ formatTime(item.arrivalAt) }}</dd>
-          </div>
-          <div>
-            <dt>비</dt>
-            <dd>{{ item.weather.precipitationProbability }}%</dd>
-          </div>
-          <div>
-            <dt>기온</dt>
-            <dd>{{ temperatureText(item.weather.temperature) }}</dd>
-          </div>
-          <div>
-            <dt>적합도</dt>
-            <dd>{{ item.score }}점</dd>
-          </div>
-        </dl>
-        <span v-if="item.score === bestScore" class="best-label">현재 비교에서 가장 적합</span>
-        <span class="apply-label">이 시간으로 다시 보기 →</span>
+        <span class="arrival-label">{{ formatTime(item.arrivalAt) }} 도착</span>
+        <span class="weather-label">
+          비 {{ item.weather.precipitationProbability }}% ·
+          {{ temperatureText(item.weather.temperature) }}
+        </span>
+        <span v-if="item.score === bestScore" class="best-label">날씨가 가장 나음</span>
+        <span class="apply-label">이 시간 선택 →</span>
       </button>
     </div>
   </section>
@@ -100,7 +92,7 @@ function temperatureText(value) {
 
 .time-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: 10px;
 }
 
@@ -113,6 +105,7 @@ article,
 }
 
 .time-grid > button {
+  min-width: 0;
   background: var(--surface);
   color: var(--ink);
   font: inherit;
@@ -136,26 +129,20 @@ article,
 }
 
 .time-grid > button > strong {
-  font-size: 19px;
+  display: block;
+  font-size: 17px;
 }
 
-dl {
-  margin: 18px 0 0;
-}
-
-dl div {
-  display: flex;
-  justify-content: space-between;
-  padding: 6px 0;
-}
-
-dt {
+.arrival-label,
+.weather-label {
+  display: block;
+  margin-top: 9px;
   color: var(--muted);
+  font-size: 12px;
 }
 
-dd {
-  margin: 0;
-  font-weight: 700;
+.weather-label {
+  margin-top: 3px;
 }
 
 .best-label {
@@ -180,7 +167,13 @@ dd {
   }
 
   .time-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 681px) and (max-width: 1080px) {
+  .time-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 </style>
