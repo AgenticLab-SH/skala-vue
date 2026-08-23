@@ -42,6 +42,7 @@ watch(
         <RouterLink to="/">이동 추천</RouterLink>
         <RouterLink to="/weather/search">도시별 날씨</RouterLink>
         <RouterLink to="/process">구현 기록</RouterLink>
+        <RouterLink to="/prompts">사용한 프롬프트</RouterLink>
         <RouterLink to="/challenges">수업 실습 기록</RouterLink>
         <RouterLink to="/reference">활용자료</RouterLink>
       </nav>
@@ -239,18 +240,11 @@ nav a.router-link-exact-active {
   }
 }
 
-@media (max-width: 680px) {
-  .site-header,
-  .site-footer,
-  .page-container {
-    width: min(100% - 24px, 1180px);
-  }
-
+@media (max-width: 1040px) {
   .site-header {
     grid-template-columns: 1fr auto;
     gap: 6px 12px;
     padding: 9px;
-    border-radius: 18px;
   }
 
   nav {
@@ -270,6 +264,18 @@ nav a.router-link-exact-active {
   nav a {
     flex: 0 0 auto;
     padding: 0 12px;
+  }
+}
+
+@media (max-width: 680px) {
+  .site-header,
+  .site-footer,
+  .page-container {
+    width: min(100% - 24px, 1180px);
+  }
+
+  .site-header {
+    border-radius: 18px;
   }
 
   .site-footer {

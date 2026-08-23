@@ -5,6 +5,7 @@
 - [배포 화면](https://agenticlab-sh.github.io/skala-vue/#/)
 - [GitHub 저장소](https://github.com/AgenticLab-SH/skala-vue)
 - [구현 기록](https://agenticlab-sh.github.io/skala-vue/#/process)
+- [사용한 프롬프트](https://agenticlab-sh.github.io/skala-vue/#/prompts)
 - [수업 실습 기록](https://agenticlab-sh.github.io/skala-vue/#/challenges)
 - [활용자료](https://agenticlab-sh.github.io/skala-vue/#/reference)
 
@@ -47,7 +48,7 @@ PDF에서 `Code Challenge`로 표시된 13개 주제를 모두 실행 화면에 
 | 169~171쪽 Provide / Inject             | 여러 단계 아래 컴포넌트에서 주입값을 받는 실행 예제를 실습 기록에 보존했습니다.                                                 | `ProvideGrandParent.vue`, `ProvideGrandChild.vue`                                      |
 | 172쪽 Props & Emits                    | 입력·추천·후보·지도 컴포넌트에 필요한 값만 props로 보내고 선택·재시도·지도 모드 변경을 emits로 올렸습니다.                      | `PropsEmitsPractice.vue`, `components/planner/`                                        |
 | 177쪽 Slot                             | Default·Named·Scoped Slot을 실습하고 Element Plus 카드 header도 named slot으로 구성했습니다.                                    | `SlotPractice.vue`, `ElementLibraryPractice.vue`                                       |
-| 178~197쪽 Vue Router                   | 이동 추천, 도시별 날씨, 동적 상세, 구현 기록, 실습, 활용자료, 404를 경로로 나눴습니다. 실습 목차도 Router hash로 연결했습니다.  | `router/index.js`, `App.vue`                                                           |
+| 178~197쪽 Vue Router                   | 이동 추천, 도시별 날씨, 동적 상세, 구현 기록, 사용한 프롬프트, 실습, 활용자료, 404를 경로로 나눴습니다. 실습 목차도 Router hash로 연결했습니다. | `router/index.js`, `App.vue`                                                           |
 | 198~211쪽 Pinia                        | Counter Store를 실습하고 온도 단위·관심 도시·마지막 계획·화면 효과 설정을 전역 store에 저장했습니다.                            | `counter.js`, `configStore.js`                                                         |
 | 212~229쪽 Axios                        | 날씨 GET과 JSON GET·POST·PATCH·DELETE를 실습하고 날씨·경로·일출 API에 base URL, params와 timeout을 적용했습니다.                | `AxiosWeatherPractice.vue`, `AxiosJsonPractice.vue`, `services/`                       |
 | 230~248쪽 Element Plus                 | 폼 검증, 수량·평점, 확인창·진행률을 페이지별로 구현하고 서비스 검색·알림에도 필요한 컴포넌트만 등록했습니다.                    | `ElementLibraryPractice.vue`, `main.js`                                                |
@@ -170,7 +171,7 @@ npm run build
 ## 제출 전 확인
 
 - `npm run lint`, 기본·staging·production 빌드 통과
-- 홈·도시별 날씨·도시 상세·구현 기록·수업 실습·활용자료·404 경로 확인
+- 홈·도시별 날씨·도시 상세·구현 기록·사용한 프롬프트·수업 실습·활용자료·404 경로 확인
 - 320·390·768·1440px, 200% 확대, 키보드와 reduced motion 확인
 - 공개 저장소와 Pages의 최신 커밋 일치 확인
 - 현재 파일, Git 이력과 `dist`에 실제 API 키가 없는지 확인

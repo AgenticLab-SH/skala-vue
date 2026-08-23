@@ -40,6 +40,11 @@ const router = createRouter({
       component: () => import('../views/WeatherAboutView.vue'),
     },
     {
+      path: '/prompts',
+      name: 'prompt-archive',
+      component: () => import('../views/PromptArchiveView.vue'),
+    },
+    {
       path: '/reference',
       name: 'weather-reference',
       component: () => import('../views/ReferenceView.vue'),
