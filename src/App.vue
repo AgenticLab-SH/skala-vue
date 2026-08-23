@@ -5,6 +5,7 @@ import { useRoute } from 'vue-router'
 import UnitToggler from './components/weather/UnitToggler.vue'
 import WeatherEffectsOverlay from './components/weather/WeatherEffectsOverlay.vue'
 import WeatherEffectsToggle from './components/weather/WeatherEffectsToggle.vue'
+import WelcomeOverlay from './components/motion/WelcomeOverlay.vue'
 import { useConfigStore } from './stores/configStore'
 
 const route = useRoute()
@@ -22,20 +23,27 @@ watch(
 
 <template>
   <div class="site-shell">
+    <WelcomeOverlay />
     <WeatherEffectsOverlay />
     <a class="skip-link" href="#main-content">본문으로 바로가기</a>
     <header class="site-header">
-      <RouterLink class="brand" to="/" aria-label="구름사이 홈">
-        <span class="brand-mark" aria-hidden="true">◒</span>
-        <span>구름사이</span>
+      <RouterLink class="brand" to="/" aria-label="날씨의 요정 홈">
+        <svg class="brand-mark" viewBox="0 0 36 36" aria-hidden="true">
+          <circle cx="25" cy="11" r="5" />
+          <path
+            d="M8 24c0-4.7 3.7-8.4 8.4-8.4 3.7 0 6.8 2.3 8 5.5 3.8.1 6.6 2.6 6.6 5.9 0 3.4-3 5.8-6.8 5.8H11.7C7 32.8 4 30.4 4 27c0-2.6 1.7-4.4 4-5v2Z"
+          />
+          <path class="brand-spark" d="m8 5 1.2 2.8L12 9l-2.8 1.2L8 13l-1.2-2.8L4 9l2.8-1.2L8 5Z" />
+        </svg>
+        <span>날씨의 요정</span>
       </RouterLink>
 
       <nav aria-label="주요 메뉴">
         <RouterLink to="/">이동 추천</RouterLink>
-        <RouterLink to="/weather/search">도시 날씨</RouterLink>
-        <RouterLink to="/process">구현 과정</RouterLink>
+        <RouterLink to="/weather/search">도시별 날씨</RouterLink>
+        <RouterLink to="/process">구현 기록</RouterLink>
         <RouterLink to="/challenges">수업 실습 기록</RouterLink>
-        <RouterLink to="/reference">레퍼런스</RouterLink>
+        <RouterLink to="/reference">활용자료</RouterLink>
       </nav>
 
       <div class="header-controls" aria-label="화면 설정">
@@ -50,7 +58,7 @@ watch(
 
     <footer class="site-footer">
       <div>
-        <strong>구름사이</strong>
+        <strong>날씨의 요정</strong>
       </div>
       <div class="footer-links">
         <span>예보와 이동 시간은 계획을 돕는 참고 정보입니다.</span>
@@ -62,6 +70,7 @@ watch(
 <style scoped>
 .site-shell {
   position: relative;
+  isolation: isolate;
   min-height: 100vh;
 }
 
@@ -84,6 +93,8 @@ watch(
 .site-header,
 .site-footer,
 .page-container {
+  position: relative;
+  z-index: 1;
   width: min(1180px, calc(100% - 40px));
   margin: 0 auto;
 }
@@ -128,8 +139,23 @@ watch(
 }
 
 .brand-mark {
-  color: var(--accent);
-  font-size: 20px;
+  width: 30px;
+  height: 30px;
+  overflow: visible;
+  fill: #fff;
+  stroke: #1d5fa9;
+  stroke-linejoin: round;
+  stroke-width: 1.8;
+}
+
+.brand-mark circle {
+  fill: #ffc85a;
+  stroke: none;
+}
+
+.brand-mark .brand-spark {
+  fill: #1d5fa9;
+  stroke: none;
 }
 
 nav {

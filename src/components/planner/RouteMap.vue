@@ -700,19 +700,20 @@ function addBuildingLayer() {
       source: 'building-shadows',
       layout: { visibility: 'none' },
       paint: {
-        'fill-color': '#273a4a',
+        'fill-antialias': true,
+        'fill-color': '#25364a',
         'fill-opacity': [
           'interpolate',
           ['linear'],
           ['get', 'shadowLength'],
           0,
-          0.3,
-          80,
-          0.42,
-          240,
           0.5,
+          80,
+          0.58,
+          240,
+          0.66,
         ],
-        'fill-outline-color': 'rgba(31, 49, 65, 0.38)',
+        'fill-outline-color': 'rgba(18, 30, 42, 0.72)',
       },
     },
     'destination-buildings',
@@ -774,6 +775,7 @@ function calculateBuildingShadows(token, shouldChooseRoute, loadAttempt = 0) {
     return
   }
 
+  // 이 프로젝트의 SunCalc 2.x는 고도와 북쪽 기준 방위각을 도 단위로 반환합니다.
   const sun = getPosition(
     new Date(props.arrivalAt),
     props.destination.latitude,
@@ -1323,11 +1325,14 @@ onBeforeUnmount(() => {
     >
       <summary>
         <span class="verification-title">
-          <strong>외부 날씨와 비교하기</strong>
-          <small>기상청 지도와 네이버 날씨로 현재 결과 확인</small>
+          <i class="verification-icon" aria-hidden="true">↗</i>
+          <span>
+            <strong>외부 날씨로 다시 확인</strong>
+            <small>기상청 지도와 네이버 날씨를 펼쳐 직접 비교합니다.</small>
+          </span>
         </span>
         <span class="verification-disclosure">
-          {{ isVerificationOpen ? '비교 자료 닫기' : '비교 자료 열기' }}
+          {{ isVerificationOpen ? '비교 화면 접기' : '비교 화면 펼치기' }}
           <i aria-hidden="true">⌄</i>
         </span>
       </summary>
@@ -1897,18 +1902,21 @@ onBeforeUnmount(() => {
 }
 
 .weather-verification {
-  margin-top: 10px;
-  border-block: 1px solid var(--line);
-  background: var(--surface);
+  overflow: hidden;
+  margin-top: 12px;
+  border: 1px solid rgba(59, 112, 170, 0.38);
+  border-radius: 16px;
+  background: rgba(245, 250, 255, 0.9);
+  box-shadow: 0 10px 28px rgba(42, 78, 116, 0.08);
 }
 
 .weather-verification summary {
   display: flex;
-  min-height: 58px;
+  min-height: 74px;
   align-items: center;
   justify-content: space-between;
   gap: 20px;
-  padding: 0 4px;
+  padding: 10px 14px;
   cursor: pointer;
   list-style: none;
 }
@@ -1919,19 +1927,36 @@ onBeforeUnmount(() => {
 
 .weather-verification .verification-title {
   display: flex;
-  align-items: baseline;
-  gap: 12px;
+  align-items: center;
+  gap: 11px;
+}
+
+.weather-verification .verification-title > span {
+  display: grid;
+  gap: 3px;
+}
+
+.verification-icon {
+  display: grid;
+  width: 38px;
+  height: 38px;
+  place-items: center;
+  border-radius: 12px;
+  background: #dceeff;
+  color: #1e66ad;
+  font-size: 19px;
+  font-style: normal;
 }
 
 .verification-disclosure {
   display: inline-flex;
-  min-height: 38px;
+  min-height: 44px;
   align-items: center;
   gap: 8px;
   padding: 0 12px;
   border: 1px solid var(--line-strong);
   border-radius: 10px;
-  background: var(--soft);
+  background: #fff;
   color: var(--ink);
   font-size: 12px;
   font-weight: 800;
@@ -1959,7 +1984,7 @@ onBeforeUnmount(() => {
 
 .weather-verification[open] summary,
 .weather-verification summary:hover {
-  background: var(--soft);
+  background: rgba(232, 244, 255, 0.82);
 }
 
 .weather-verification summary:focus-visible {
@@ -1968,7 +1993,7 @@ onBeforeUnmount(() => {
 }
 
 .verification-content {
-  padding: 18px 4px 22px;
+  padding: 20px 14px 24px;
   border-top: 1px solid var(--line);
 }
 

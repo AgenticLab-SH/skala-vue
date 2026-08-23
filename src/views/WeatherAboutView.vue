@@ -3,17 +3,17 @@ const lessons = [
   {
     pages: '126·144쪽',
     topic: '반응형 상태와 계산 속성',
-    use: '출발 조건은 ref로 관리하고, 선택한 도시와 추천 문구는 computed로 계산했습니다.',
+    use: '출발 조건과 API 상태는 ref로 관리하고, 선택한 도시와 추천 결과는 computed로 계산했습니다.',
   },
   {
     pages: '146~177쪽',
     topic: '컴포넌트, Props·Emits, Slot',
-    use: '입력, 추천, 후보, 시간 비교, 경로 지도를 나누고 부모 화면에서 결과를 연결했습니다.',
+    use: '입력 폼, 추천 결과, 후보 목록, 시간 비교와 경로 지도를 컴포넌트로 나눠 연결했습니다.',
   },
   {
     pages: '178~197쪽',
     topic: 'Vue Router',
-    use: '추천·도시 목록·상세·구현 과정·실습 기록을 경로로 분리했습니다.',
+    use: '이동 추천, 도시별 날씨, 상세 화면, 구현 기록과 수업 실습 기록을 경로로 분리했습니다.',
   },
   {
     pages: '198~211쪽',
@@ -23,40 +23,75 @@ const lessons = [
   {
     pages: '212~229쪽',
     topic: 'Axios',
-    use: '날씨와 경로 API를 요청하고 서로 다른 응답을 같은 형태로 정리했습니다.',
+    use: '날씨와 경로 API를 요청하고 제공자마다 다른 응답을 서비스에서 쓰는 형태로 정리했습니다.',
   },
   {
     pages: '230~273쪽',
     topic: 'UI 라이브러리와 빌드 환경',
-    use: 'Element Plus는 필요한 컴포넌트만 등록하고 환경별 빌드를 따로 확인했습니다.',
+    use: 'Element Plus는 필요한 컴포넌트만 등록하고, 환경별 빌드와 GitHub Pages 배포를 확인했습니다.',
+  },
+]
+
+const troubleshooting = [
+  {
+    problem: '활동을 바꿔도 추천 장소가 같았습니다.',
+    cause: '날씨 점수만 바꾸고 관광지 목록은 공통으로 사용했습니다.',
+    fix: '도시별로 러닝·등산·바다·풋살·자전거 장소를 나누고, 선택한 활동이 가능한 도시만 비교했습니다.',
+  },
+  {
+    problem: 'OpenWeather 키를 공개 화면에 둘 수 없었습니다.',
+    cause: 'Vite 환경 변수는 빌드 결과에 포함될 수 있었습니다.',
+    fix: '배포 작업에서만 키를 사용해 18개 도시 예보 파일을 만들고, 화면은 키가 빠진 결과만 읽게 했습니다.',
+  },
+  {
+    problem: '경로 요청이 실패하면 추천도 사라졌습니다.',
+    cause: '경로와 날씨 요청을 하나의 성공 조건으로 묶었습니다.',
+    fix: '경로 실패는 직선거리 추정으로 처리하고, 확인된 날씨 추천은 그대로 남겼습니다.',
+  },
+  {
+    problem: '건물 그림자가 계산돼도 지도에서 잘 보이지 않았습니다.',
+    cause: '그림자 면과 3D 건물 바닥의 색 차이가 작았습니다.',
+    fix: '그림자 면과 외곽선의 대비를 높이고, 도착 기준 시각과 같은 색의 범례를 지도 안에 표시했습니다.',
+  },
+  {
+    problem: '비·흐림 효과가 글과 버튼을 가렸습니다.',
+    cause: '날씨 모션을 콘텐츠 위의 화면 오버레이로 올렸습니다.',
+    fix: '효과를 배경 계층으로 내리고 맑음·흐림·비·눈·안개만 배경색과 모션으로 구분했습니다.',
+  },
+  {
+    problem: '한 경로만으로는 그늘이 더 많은 길을 고를 수 없었습니다.',
+    cause: '비교할 경로 대안을 요청하지 않았습니다.',
+    fix: 'OSRM 경로 대안을 받아 지도 안 건물 그림자와 겹치는 비율, 추가 시간을 함께 비교했습니다.',
   },
 ]
 </script>
 
 <template>
-  <div class="process-view">
+  <article class="process-view">
     <header class="page-intro">
-      <p>구현 과정</p>
-      <h1>날씨 카드를<br />이동 추천으로 확장했습니다.</h1>
-      <span>수업에서 배운 기능을 한 번의 계획 흐름으로 연결했습니다.</span>
+      <h1>날씨를 확인한 다음 행동까지 이어지게 만들었습니다.</h1>
+      <p>현재 날씨 카드에서 시작해, 도착 날씨와 활동 장소를 비교하는 서비스로 확장했습니다.</p>
     </header>
 
-    <section class="origin-section">
-      <p>시작</p>
+    <section class="reason-section" aria-labelledby="reason-title">
+      <h2 id="reason-title">구현 이유와 과정</h2>
       <div>
-        <h2>현재 날씨만 보여 주는 화면에서 출발했습니다.</h2>
+        <h3>그늘길의 시간대별 건물 그림자에서 아이디어를 얻었습니다.</h3>
         <p>
-          처음에는 서울·수원·창원·부산의 날씨 카드를 만들었습니다. 카드를 읽은 다음 무엇을 할 수
-          있을지 고민하다가, 도착할 시간의 예보를 비교해 갈 곳을 정하는 기능으로 방향을 바꿨습니다.
+          같은 길도 시간과 햇빛에 따라 걷기 편한 정도가 달라지는 점이 흥미로웠습니다. 여기서 날씨도
+          단순히 현재 상태를 보는 정보가 아니라, 출발 시간이나 목적지를 바꾸는 기준으로 사용할 수
+          있겠다고 생각했습니다.
+        </p>
+        <p>
+          처음에는 서울·수원·창원·부산의 날씨 카드만 만들었습니다. 이후 출발 도시와 시간을 받고,
+          이동 가능한 도시의 도착 예보를 비교하도록 바꿨습니다. 마지막에는 활동별 장소, 실제 경로,
+          건물 그림자와 출발 시간 비교를 한 화면에 연결했습니다.
         </p>
       </div>
     </section>
 
     <section class="learning-section" aria-labelledby="learning-title">
-      <div class="section-title">
-        <p>수업 내용 적용</p>
-        <h2 id="learning-title">배운 개념이 실제로 쓰인 곳</h2>
-      </div>
+      <h2 id="learning-title">수업 내용 적용</h2>
       <div class="learning-list">
         <article v-for="lesson in lessons" :key="lesson.pages">
           <span>{{ lesson.pages }}</span>
@@ -66,219 +101,126 @@ const lessons = [
       </div>
     </section>
 
-    <section class="flow-section" aria-labelledby="flow-title">
-      <div class="section-title">
-        <p>데이터 흐름</p>
-        <h2 id="flow-title">입력에서 경로까지</h2>
-      </div>
-      <ol>
-        <li><span>1</span>선택한 활동 장소가 있는 도시를 고릅니다.</li>
-        <li><span>2</span>도착 시각과 가까운 예보를 찾습니다.</li>
-        <li><span>3</span>도착 날씨, 장소 적합도와 이동 시간을 비교합니다.</li>
-        <li><span>4</span>도착 예보를 비·구름·안개·눈 화면 효과로 구분합니다.</li>
-        <li><span>5</span>OSRM 경로 대안과 목적지 3D 건물을 지도에 표시합니다.</li>
-        <li><span>6</span>도착 시각의 태양각과 건물 높이로 그림자를 만들고 경로를 비교합니다.</li>
-        <li><span>7</span>48개 기준 지역을 144개 지점으로 나눠 강수량과 운량을 비교합니다.</li>
-        <li><span>8</span>활동 장소와 비가 올 때의 대안, 외부 검증 링크를 표시합니다.</li>
-      </ol>
-    </section>
-
-    <section class="failure-section" aria-labelledby="failure-title">
-      <div class="section-title">
-        <p>실패와 수정</p>
-        <h2 id="failure-title">기능을 멈추지 않는 쪽으로 고쳤습니다.</h2>
-      </div>
-      <div class="failure-list">
-        <article>
-          <strong>활동을 바꿔도 같은 관광지가 나왔습니다.</strong>
-          <p>
-            처음에는 날씨에 따라 같은 세 곳의 순서만 바꿨습니다. 도시별 활동 장소를 따로 만들고,
-            선택한 활동을 할 수 있는 도시만 비교했습니다. 비가 오면 활동 장소 아래에 실내 대안 한
-            곳만 표시합니다.
-          </p>
+    <section class="troubleshooting-section" aria-labelledby="troubleshooting-title">
+      <h2 id="troubleshooting-title">트러블 슈팅</h2>
+      <div class="troubleshooting-list">
+        <article v-for="item in troubleshooting" :key="item.problem">
+          <strong>{{ item.problem }}</strong>
+          <dl>
+            <div>
+              <dt>원인</dt>
+              <dd>{{ item.cause }}</dd>
+            </div>
+            <div>
+              <dt>수정</dt>
+              <dd>{{ item.fix }}</dd>
+            </div>
+          </dl>
         </article>
-        <article>
-          <strong>API 키를 공개 화면에 넣을 수 없었습니다.</strong>
-          <p>
-            Vite 환경 변수는 빌드 결과에 포함될 수 있었습니다. 배포 작업에서만 OpenWeather 키를
-            사용해 18개 도시의 현재·5일 예보 파일을 만들고, 화면은 키가 빠진 결과만 읽도록
-            바꿨습니다. 파일이 없을 때는 Open-Meteo로 전환합니다.
-          </p>
-        </article>
-        <article>
-          <strong>경로 요청이 실패하면 추천도 사라졌습니다.</strong>
-          <p>추천은 유지하고 직선거리 기반 시간과 추정선을 표시하도록 바꿨습니다.</p>
-        </article>
-        <article>
-          <strong>3D 건물이 콘솔 오류로 보이지 않았습니다.</strong>
-          <p>
-            건물 바닥 높이에 중첩한 zoom 조건이 MapLibre 표현식 규칙에 맞지 않았습니다. zoom은 높이
-            보간에만 쓰고 바닥 값은 건물 데이터에서 바로 읽도록 수정했습니다.
-          </p>
-        </article>
-        <article>
-          <strong>그림자를 계산했지만 지도에서 알아보기 어려웠습니다.</strong>
-          <p>
-            그늘 경로에서만 켜지던 그림자 계산을 3D 그림자 보기와 함께 쓰도록 묶었습니다. 그림자
-            면의 대비를 높이고 도착 시각 범례를 지도 안에 표시했습니다. 지도 종류와 날씨 필터도 한
-            번에 모두 보이지 않게 나눴습니다.
-          </p>
-        </article>
-        <article>
-          <strong>세부 기상 지점의 원형 표시가 빠졌습니다.</strong>
-          <p>
-            확대 수준을 계산하는 식의 위치가 MapLibre 규칙과 맞지 않았습니다. 확대 보간을 식의
-            바깥으로 옮긴 뒤 버튼 수, 목록 수, 지도 표시 수와 콘솔을 다시 비교했습니다.
-          </p>
-        </article>
-        <article>
-          <strong>흐림 효과가 단순한 회색 배경처럼 보였습니다.</strong>
-          <p>
-            처음에는 구름과 배경의 명도가 비슷해 상태를 구분하기 어려웠습니다. 화면을 가리지 않는
-            범위에서 구름층의 명암만 조정하고, 도시명과 날씨 문구를 함께 남겼습니다.
-          </p>
-        </article>
-        <article>
-          <strong>지도를 움직여도 비 오는 지역을 찾을 수 없었습니다.</strong>
-          <p>
-            화면에 내리던 비는 한 도시의 상태만 표현하고 지도 좌표와는 연결되지 않았습니다. 전국
-            대표 지점의 현재 강수량과 운량을 따로 요청해 비·흐림 지도와 텍스트 목록을 만들고,
-            비·구름 모션은 지점 marker에 붙여 지도 이동을 따라가게 했습니다.
-          </p>
-        </article>
-        <article>
-          <strong>세부 지점 모션이 지도 아래로 밀렸습니다.</strong>
-          <p>
-            marker 요소의 위치 기준이 MapLibre가 계산한 좌표를 덮고 있었습니다. 위치 기준을 바로잡고
-            중심권·북동권·남서권의 화면 좌표를 비교해 같은 지역 안에 표시되는지 확인했습니다.
-          </p>
-        </article>
-        <article>
-          <strong>네이버 날씨를 화면 안에 바로 넣을 수 없었습니다.</strong>
-          <p>
-            외부 페이지 삽입이 차단되어 빈 지도를 만들지는 않았습니다. 현재 중심과 배율을 반영한
-            기상청 지도를 비교 화면으로 두고 네이버 날씨와 레이더 전체 화면은 새 창으로 열었습니다.
-          </p>
-        </article>
-        <article>
-          <strong>건물 그림자만으로는 더 나은 경로를 고를 수 없었습니다.</strong>
-          <p>
-            한 경로만 그린 상태라 비교 대상이 없었습니다. OSRM 경로 대안을 함께 요청하고 도착지
-            주변의 각 경로 좌표가 건물 그림자 안에 들어가는 비율을 계산했습니다. 대안이나 건물
-            높이가 없으면 빠른 경로를 그대로 유지하고 이유를 표시합니다.
-          </p>
-        </article>
-      </div>
-      <div class="runtime-status" role="status">
-        <span>현재 실행 환경</span>
-        <strong>OpenWeather 예보 · Open-Meteo 전국 지도</strong>
       </div>
     </section>
 
-    <section class="limit-section">
-      <p>현재 범위</p>
+    <section class="result-section" aria-labelledby="result-title">
+      <h2 id="result-title">최종 구현 내용</h2>
       <div>
-        <h2>활동 장소와 도착 날씨, 이동 경로를 함께 구현했습니다.</h2>
-        <p>
-          날씨 지도는 48개 기준 지역의 144개 모델 지점을 비교하며 행정구역 경계나 기상 레이더는
-          아닙니다. 검증 영역에서는 기상청 비교 지도와 네이버 날씨·레이더 링크를 확인할 수 있습니다.
-          그늘 우선 경로는 도착지 주변 현재 지도에 로드된 건물과 자동차 경로 대안을 비교한
-          결과입니다. 전체 이동 구간의 그늘이나 보행 안전을 보장하지 않습니다. 활동 장소는 정적
-          정보라 운영 시간·예약·혼잡도는 출발 전에 확인해야 합니다.
+        <h3>출발 조건부터 도착지 선택까지 한 흐름으로 구현했습니다.</h3>
+        <ul>
+          <li>18개 도시의 OpenWeather 도착 예보와 활동별 장소를 비교합니다.</li>
+          <li>이동 시간 안의 전체 후보와 OSRM 경로를 확인하고 원하는 도시로 바꿀 수 있습니다.</li>
+          <li>출발 시간을 바꿔 다시 추천하거나, 도착지 3D 건물과 그림자를 확인할 수 있습니다.</li>
+          <li>144개 기상 지점의 비·흐림 상태와 외부 날씨 자료를 함께 비교할 수 있습니다.</li>
+        </ul>
+        <p class="result-note">
+          지도 기상 지점은 비교용 모델값이며 기상 레이더가 아닙니다. 그늘 경로도 도착지 주변의 지도
+          건물과 자동차 경로 대안을 비교한 참고 결과입니다.
         </p>
       </div>
     </section>
-  </div>
+  </article>
 </template>
 
 <style scoped>
 .process-view {
   width: 100%;
-  max-width: 820px;
-  margin: 0 auto;
+  max-width: 860px;
   padding-top: 58px;
+  margin: 0 auto;
 }
 
-.page-intro p,
+.page-intro {
+  padding-bottom: 42px;
+  border-bottom: 1px solid var(--ink);
+}
+
 .page-intro h1,
-.page-intro span {
+.page-intro p,
+.reason-section p,
+.reason-section h2,
+.reason-section h3,
+.learning-section h2,
+.troubleshooting-section h2,
+.result-section p,
+.result-section h2,
+.result-section h3 {
   margin: 0;
 }
 
-.page-intro > p,
-.section-title > p,
-.origin-section > p,
-.limit-section > p {
+.page-intro h1 {
+  max-width: 820px;
+  font-size: clamp(42px, 7vw, 72px);
+  line-height: 1.08;
+  letter-spacing: -0.062em;
+  word-break: keep-all;
+}
+
+.page-intro p {
+  max-width: 640px;
+  margin-top: 20px;
+  color: var(--muted);
+  font-size: 17px;
+  line-height: 1.7;
+}
+
+.reason-section,
+.result-section {
+  display: grid;
+  grid-template-columns: 140px 1fr;
+  gap: 28px;
+  padding: 34px 0;
+  border-bottom: 1px solid var(--line-strong);
+}
+
+.reason-section > h2,
+.result-section > h2 {
+  margin: 0;
   color: var(--accent);
   font-size: 12px;
   font-weight: 800;
 }
 
-.page-intro h1 {
-  max-width: 860px;
-  margin-top: 16px;
-  font-size: clamp(42px, 8vw, 76px);
-  line-height: 1.06;
-  letter-spacing: -0.065em;
-}
-
-.page-intro span {
-  display: block;
-  max-width: 640px;
-  margin-top: 22px;
-  color: var(--muted);
-  font-size: 17px;
-  line-height: 1.75;
-}
-
-.origin-section,
-.limit-section {
-  display: grid;
-  grid-template-columns: 130px 1fr;
-  gap: 24px;
-  margin-top: 62px;
-  padding: 30px 0;
-  border-top: 1px solid var(--ink);
-}
-
-.origin-section > p,
-.origin-section h2,
-.origin-section div p,
-.limit-section > p,
-.limit-section h2,
-.limit-section div p,
-.section-title p,
-.section-title h2 {
+.reason-section h3,
+.result-section h3,
+.learning-section > h2,
+.troubleshooting-section > h2 {
   margin: 0;
-}
-
-.origin-section h2,
-.limit-section h2,
-.section-title h2 {
   font-size: 26px;
   letter-spacing: -0.04em;
 }
 
-.origin-section div p,
-.limit-section div p {
-  max-width: 780px;
-  margin-top: 14px;
+.reason-section div > p {
+  margin-top: 15px;
   color: var(--muted);
   line-height: 1.8;
 }
 
 .learning-section,
-.flow-section,
-.failure-section {
-  margin-top: 56px;
+.troubleshooting-section {
+  margin-top: 58px;
 }
 
-.section-title h2 {
-  margin-top: 8px;
-}
-
-.learning-list {
-  margin-top: 22px;
+.learning-list,
+.troubleshooting-list {
+  margin-top: 20px;
   border-top: 1px solid var(--line-strong);
 }
 
@@ -287,7 +229,7 @@ const lessons = [
   grid-template-columns: 110px minmax(180px, 0.8fr) 1.6fr;
   gap: 22px;
   align-items: start;
-  padding: 22px 0;
+  padding: 21px 0;
   border-bottom: 1px solid var(--line);
 }
 
@@ -298,71 +240,70 @@ const lessons = [
 }
 
 .learning-list p,
-.failure-list p {
+.troubleshooting-list dd,
+.result-note {
   margin: 0;
   color: var(--muted);
   line-height: 1.7;
 }
 
-.flow-section {
-  display: grid;
-  grid-template-columns: 0.75fr 1.25fr;
-  gap: 50px;
-  padding: 34px;
-  border-radius: var(--radius-panel);
-  background: var(--ink);
-  color: #fff;
-}
-
-.flow-section .section-title > p {
-  color: #9fc6f3;
-}
-
-.flow-section ol {
-  padding: 0;
-  margin: 0;
-  list-style: none;
-}
-
-.flow-section li {
-  display: flex;
-  gap: 14px;
-  padding: 13px 0;
-  border-top: 1px solid rgba(255, 255, 255, 0.2);
-}
-
-.flow-section li span {
-  color: #9fc6f3;
-  font-size: 12px;
-  font-weight: 800;
-}
-
-.failure-list {
-  margin-top: 22px;
-  border-top: 1px solid var(--line-strong);
-}
-
-.failure-list article {
+.troubleshooting-list article {
   display: grid;
   grid-template-columns: minmax(220px, 0.75fr) 1.25fr;
-  gap: 24px;
+  gap: 28px;
   padding: 22px 0;
   border-bottom: 1px solid var(--line);
 }
 
-.runtime-status {
-  display: flex;
-  justify-content: space-between;
-  gap: 20px;
-  margin-top: 16px;
-  padding: 18px 20px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius-control);
-  background: var(--surface);
+.troubleshooting-list dl,
+.troubleshooting-list dd {
+  margin: 0;
 }
 
-.runtime-status span {
-  color: var(--muted);
+.troubleshooting-list dl {
+  display: grid;
+  gap: 9px;
+}
+
+.troubleshooting-list dl div {
+  display: grid;
+  grid-template-columns: 42px 1fr;
+  gap: 8px;
+}
+
+.troubleshooting-list dt {
+  color: var(--ink);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.result-section {
+  margin-top: 58px;
+  border-top: 1px solid var(--ink);
+}
+
+.result-section ul {
+  padding: 0;
+  margin: 20px 0 0;
+  list-style: none;
+}
+
+.result-section li {
+  padding: 11px 0 11px 20px;
+  border-top: 1px solid var(--line);
+  line-height: 1.6;
+}
+
+.result-section li::before {
+  content: '—';
+  margin-left: -20px;
+  margin-right: 9px;
+  color: var(--accent);
+}
+
+.result-note {
+  margin-top: 18px !important;
+  font-size: 13px;
 }
 
 @media (max-width: 760px) {
@@ -370,32 +311,21 @@ const lessons = [
     padding-top: 38px;
   }
 
-  .origin-section,
-  .limit-section,
-  .flow-section,
+  .reason-section,
+  .result-section,
   .learning-list article,
-  .failure-list article {
+  .troubleshooting-list article {
     grid-template-columns: 1fr;
   }
 
-  .origin-section,
-  .limit-section {
+  .reason-section,
+  .result-section {
     gap: 12px;
   }
 
   .learning-list article,
-  .failure-list article {
+  .troubleshooting-list article {
     gap: 8px;
-  }
-
-  .flow-section {
-    gap: 28px;
-    padding: 26px 20px;
-  }
-
-  .runtime-status {
-    flex-direction: column;
-    gap: 6px;
   }
 }
 </style>

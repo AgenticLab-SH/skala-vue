@@ -12,15 +12,39 @@ const router = useRouter()
 const configStore = useConfigStore()
 const query = ref(typeof route.query.search === 'string' ? route.query.search : '')
 const favoriteOnly = ref(route.query.favorite === '1')
+const regionValues = new Set(weatherCities.map((city) => city.region))
+const selectedRegion = ref(
+  typeof route.query.region === 'string' && regionValues.has(route.query.region)
+    ? route.query.region
+    : '',
+)
 const status = ref('loading')
 const cityWeather = ref(new Map())
 const failedCount = ref(0)
 
+const regionLabelByName = {
+  서울특별시: '서울',
+  인천광역시: '인천',
+  부산광역시: '부산',
+  대구광역시: '대구',
+  대전광역시: '대전',
+  광주광역시: '광주',
+}
+
+const regionOptions = [...regionValues].map((value) => ({
+  value,
+  label: regionLabelByName[value] ?? value,
+  count: weatherCities.filter((city) => city.region === value).length,
+}))
+
 const filteredCities = computed(() => {
   const keyword = query.value.trim()
-  const searched = keyword
-    ? weatherCities.filter((city) => `${city.name} ${city.region}`.includes(keyword))
+  const byRegion = selectedRegion.value
+    ? weatherCities.filter((city) => city.region === selectedRegion.value)
     : weatherCities
+  const searched = keyword
+    ? byRegion.filter((city) => `${city.name} ${city.region}`.includes(keyword))
+    : byRegion
   return favoriteOnly.value ? searched.filter((city) => configStore.isFavorite(city.id)) : searched
 })
 
@@ -29,9 +53,15 @@ function replaceQuery() {
     name: 'weather-search',
     query: {
       ...(query.value.trim() ? { search: query.value.trim() } : {}),
+      ...(selectedRegion.value ? { region: selectedRegion.value } : {}),
       ...(favoriteOnly.value ? { favorite: '1' } : {}),
     },
   })
+}
+
+function updateRegion(region) {
+  selectedRegion.value = region
+  replaceQuery()
 }
 
 function updateQuery(value) {
@@ -89,6 +119,13 @@ watch(
   },
 )
 
+watch(
+  () => route.query.region,
+  (value) => {
+    selectedRegion.value = typeof value === 'string' && regionValues.has(value) ? value : ''
+  },
+)
+
 watch([filteredCities, cityWeather, status], syncWeatherEffect)
 
 watch(
@@ -104,8 +141,24 @@ onMounted(loadCities)
 <template>
   <div class="city-view">
     <header class="page-intro">
-      <h1>도시 날씨</h1>
+      <h1>도시별 날씨</h1>
+      <p>시·도를 먼저 고른 뒤 도시의 현재 날씨를 확인합니다.</p>
     </header>
+
+    <nav class="region-filter" aria-label="시·도 선택">
+      <button type="button" :aria-pressed="selectedRegion === ''" @click="updateRegion('')">
+        전체 <span>{{ weatherCities.length }}</span>
+      </button>
+      <button
+        v-for="region in regionOptions"
+        :key="region.value"
+        type="button"
+        :aria-pressed="selectedRegion === region.value"
+        @click="updateRegion(region.value)"
+      >
+        {{ region.label }} <span>{{ region.count }}</span>
+      </button>
+    </nav>
 
     <div class="search-row">
       <label for="city-search">도시 또는 지역 검색</label>
@@ -180,12 +233,45 @@ onMounted(loadCities)
   font-size: clamp(40px, 7vw, 66px);
   letter-spacing: -0.06em;
 }
+.page-intro p {
+  margin: 14px 0 0;
+  color: var(--muted);
+}
+.region-filter {
+  display: flex;
+  overflow-x: auto;
+  gap: 8px;
+  margin-top: 34px;
+  padding: 4px 0 10px;
+  scrollbar-width: thin;
+}
+.region-filter button {
+  flex: 0 0 auto;
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.78);
+  color: var(--muted);
+  font-weight: 750;
+}
+.region-filter button[aria-pressed='true'] {
+  border-color: var(--ink);
+  background: var(--ink);
+  color: #fff;
+}
+.region-filter span {
+  margin-left: 5px;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  opacity: 0.72;
+}
 .search-row {
   display: grid;
   grid-template-columns: 160px 1fr auto;
   gap: 18px;
   align-items: center;
-  margin-top: 48px;
+  margin-top: 14px;
   padding: 18px;
   border: 1px solid var(--line);
   border-radius: var(--radius-panel);

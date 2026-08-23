@@ -6,6 +6,7 @@ import CandidateCard from '../components/planner/CandidateCard.vue'
 import DepartureComparison from '../components/planner/DepartureComparison.vue'
 import PlannerForm from '../components/planner/PlannerForm.vue'
 import RecommendationHero from '../components/planner/RecommendationHero.vue'
+import SearchLoadingState from '../components/motion/SearchLoadingState.vue'
 import { useTripPlanner } from '../composables/useTripPlanner'
 import { findActivity } from '../data/activities'
 import { weatherCities } from '../data/weatherCities'
@@ -41,10 +42,17 @@ const resultFeedback = ref(null)
 const weatherGrid = ref([])
 const weatherGridStatus = ref('loading')
 const weatherGridError = ref('')
-const activeMapMode = ref('route')
 
 const origin = computed(() => weatherCities.find((city) => city.id === originId.value))
 const activity = computed(() => findActivity(activityId.value))
+
+function showOriginWeatherEffect() {
+  const originWeather = planner.recommendations.value.find(
+    (item) => item.city.id === originId.value,
+  )
+  if (originWeather) configStore.setWeatherEffect(origin.value.name, originWeather.weather)
+  else configStore.clearWeatherEffect()
+}
 
 async function submitPlanner(focusResult = true) {
   configStore.clearWeatherEffect()
@@ -59,12 +67,7 @@ async function submitPlanner(focusResult = true) {
     departureAt: new Date(departureAt.value),
     maxTravelMinutes: maxTravelMinutes.value,
   })
-  if (planner.selectedRecommendation.value && activeMapMode.value === 'route') {
-    configStore.setWeatherEffect(
-      planner.selectedRecommendation.value.city.name,
-      planner.selectedRecommendation.value.weather,
-    )
-  }
+  showOriginWeatherEffect()
   if (focusResult) {
     await nextTick()
     resultFeedback.value?.focus()
@@ -84,22 +87,13 @@ async function loadWeatherGrid(force = false) {
   }
 }
 
-function handleMapModeChange(mode) {
-  activeMapMode.value = mode
-  const recommendation = planner.selectedRecommendation.value
-  if (mode === 'route' && recommendation) {
-    configStore.setWeatherEffect(recommendation.city.name, recommendation.weather)
-  } else {
-    // 여러 지역을 함께 볼 때는 한 도시의 화면 효과가 지도 의미를 가리지 않게 비웁니다.
-    configStore.clearWeatherEffect()
-  }
+function handleMapModeChange() {
+  showOriginWeatherEffect()
 }
 
 async function selectCandidate(item) {
   planner.selectRecommendation(item.city.id)
-  if (activeMapMode.value === 'route') {
-    configStore.setWeatherEffect(item.city.name, item.weather)
-  }
+  showOriginWeatherEffect()
   await nextTick()
   resultFeedback.value?.focus()
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
@@ -117,12 +111,18 @@ function openDetail(item) {
   })
 }
 
-watch([originId, activityId, maxTravelMinutes], () => {
+async function applyDepartureAlternative(item) {
+  departureAt.value = toLocalInputValue(new Date(item.departureAt))
+  await submitPlanner()
+}
+
+watch([originId, activityId, maxTravelMinutes], ([nextOrigin], [previousOrigin]) => {
   configStore.savePlanner({
     originId: originId.value,
     activityId: activityId.value,
     maxTravelMinutes: maxTravelMinutes.value,
   })
+  if (nextOrigin !== previousOrigin) configStore.clearWeatherEffect()
 })
 
 onMounted(() => {
@@ -156,8 +156,8 @@ onMounted(() => {
       aria-live="polite"
       :aria-busy="planner.status.value === 'loading'"
     >
-      <div v-if="planner.status.value === 'loading'" class="loading-panel" role="status">
-        <p>도시별 도착 시각을 계산하고 예보를 비교하고 있습니다.</p>
+      <div v-if="planner.status.value === 'loading'" class="loading-panel">
+        <SearchLoadingState message="도시별 도착 시각을 계산하고 예보를 비교합니다." />
       </div>
 
       <div
@@ -239,7 +239,10 @@ onMounted(() => {
           </template>
         </Suspense>
 
-        <DepartureComparison :alternatives="planner.timeAlternatives.value" />
+        <DepartureComparison
+          :alternatives="planner.timeAlternatives.value"
+          @select="applyDepartureAlternative"
+        />
 
         <section v-if="planner.selectedRecommendation.value.score < 55" class="plan-b">
           <div>

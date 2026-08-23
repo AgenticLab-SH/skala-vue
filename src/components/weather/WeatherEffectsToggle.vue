@@ -6,7 +6,7 @@ import { useConfigStore } from '../../stores/configStore'
 const configStore = useConfigStore()
 
 const icon = computed(() => {
-  const icons = { rain: '☂', cloud: '☁', fog: '≋', snow: '❄' }
+  const icons = { sun: '☀', rain: '☂', cloud: '☁', fog: '≋', snow: '❄' }
   return icons[configStore.weatherEffect.mode] ?? '◌'
 })
 

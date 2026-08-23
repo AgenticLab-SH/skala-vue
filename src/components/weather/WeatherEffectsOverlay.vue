@@ -14,14 +14,14 @@ const effectClasses = computed(() => [
 ])
 
 // 위치와 속도를 고정해 다시 렌더링해도 빗방울이 갑자기 튀지 않도록 했습니다.
-const rainDrops = Array.from({ length: 44 }, (_, index) => ({
+const rainDrops = Array.from({ length: 84 }, (_, index) => ({
   id: index,
   style: {
     '--drop-x': `${(index * 37 + 7) % 101}%`,
     '--drop-delay': `${-((index * 19) % 34) / 10}s`,
-    '--drop-duration': `${0.68 + (index % 8) * 0.055}s`,
-    '--drop-length': `${14 + (index % 5) * 4}px`,
-    '--drop-opacity': `${0.2 + (index % 4) * 0.07}`,
+    '--drop-duration': `${0.72 + (index % 8) * 0.06}s`,
+    '--drop-length': `${18 + (index % 6) * 5}px`,
+    '--drop-opacity': `${0.28 + (index % 4) * 0.08}`,
   },
 }))
 
@@ -36,14 +36,14 @@ const snowflakes = Array.from({ length: 32 }, (_, index) => ({
   },
 }))
 
-const cloudBanks = Array.from({ length: 4 }, (_, index) => ({
+const cloudBanks = Array.from({ length: 6 }, (_, index) => ({
   id: index,
   style: {
-    '--cloud-top': `${8 + index * 15}%`,
-    '--cloud-left': `${-18 + index * 27}%`,
-    '--cloud-scale': `${0.78 + index * 0.13}`,
-    '--cloud-delay': `${-index * 5.5}s`,
-    '--cloud-duration': `${32 + index * 8}s`,
+    '--cloud-top': `${4 + index * 14}%`,
+    '--cloud-left': `${-28 + index * 19}%`,
+    '--cloud-scale': `${0.86 + (index % 4) * 0.18}`,
+    '--cloud-delay': `${-index * 7.5}s`,
+    '--cloud-duration': `${38 + (index % 3) * 11}s`,
   },
 }))
 </script>
@@ -52,6 +52,12 @@ const cloudBanks = Array.from({ length: 4 }, (_, index) => ({
   <Transition name="weather-overlay-fade">
     <div v-if="isVisible" class="weather-overlay" :class="effectClasses" aria-hidden="true">
       <div class="weather-atmosphere"></div>
+
+      <div v-if="configStore.weatherEffect.mode === 'sun'" class="sun-layer">
+        <span class="sun-rays"></span>
+        <span class="sun-disc"></span>
+        <span class="sun-glow"></span>
+      </div>
 
       <div
         v-if="['rain', 'cloud', 'snow'].includes(configStore.weatherEffect.mode)"
@@ -83,7 +89,7 @@ const cloudBanks = Array.from({ length: 4 }, (_, index) => ({
       </div>
 
       <div class="weather-overlay-caption">
-        <span>{{ configStore.weatherEffect.cityName }}</span>
+        <span>출발지 {{ configStore.weatherEffect.cityName }}</span>
         <strong>{{ configStore.weatherEffect.condition }}</strong>
       </div>
     </div>
@@ -93,7 +99,7 @@ const cloudBanks = Array.from({ length: 4 }, (_, index) => ({
 <style scoped>
 .weather-overlay {
   position: fixed;
-  z-index: 5;
+  z-index: 0;
   inset: 0;
   overflow: hidden;
   pointer-events: none;
@@ -103,62 +109,116 @@ const cloudBanks = Array.from({ length: 4 }, (_, index) => ({
 .cloud-layer,
 .rain-layer,
 .snow-layer,
-.fog-layer {
+.fog-layer,
+.sun-layer {
   position: absolute;
   inset: 0;
 }
 
 .weather-atmosphere {
-  background: rgba(61, 78, 96, 0.055);
+  background: linear-gradient(160deg, rgba(211, 229, 247, 0.6), rgba(238, 243, 247, 0.18));
+}
+
+.weather-overlay--sun .weather-atmosphere {
+  background:
+    radial-gradient(circle at 82% 12%, rgba(255, 207, 80, 0.64), transparent 30%),
+    linear-gradient(155deg, rgba(206, 234, 255, 0.94), rgba(255, 244, 202, 0.78));
+}
+
+.weather-overlay--cloud .weather-atmosphere {
+  background: linear-gradient(155deg, rgba(147, 168, 188, 0.62), rgba(220, 228, 235, 0.72));
 }
 
 .weather-overlay--rain .weather-atmosphere {
-  background: rgba(42, 60, 78, 0.085);
+  background: linear-gradient(155deg, rgba(70, 98, 125, 0.67), rgba(185, 201, 216, 0.72));
 }
 
 .weather-overlay--snow .weather-atmosphere {
-  background: rgba(221, 235, 245, 0.1);
+  background: linear-gradient(155deg, rgba(231, 242, 250, 0.92), rgba(248, 251, 253, 0.7));
 }
 
 .weather-overlay--heavy .weather-atmosphere {
-  background: rgba(35, 51, 69, 0.12);
+  background: linear-gradient(160deg, rgba(56, 77, 99, 0.48), rgba(180, 195, 209, 0.42));
+}
+
+.sun-layer {
+  overflow: hidden;
+}
+
+.sun-disc,
+.sun-glow,
+.sun-rays {
+  position: absolute;
+  top: 6vh;
+  right: 8vw;
+  border-radius: 50%;
+}
+
+.sun-disc {
+  width: clamp(120px, 14vw, 210px);
+  height: clamp(120px, 14vw, 210px);
+  background: rgba(255, 197, 52, 0.94);
+  box-shadow: 0 0 95px rgba(255, 188, 35, 0.68);
+}
+
+.sun-glow {
+  width: clamp(310px, 38vw, 560px);
+  height: clamp(310px, 38vw, 560px);
+  margin: clamp(-180px, -12vw, -96px);
+  border: 1px solid rgba(255, 207, 76, 0.32);
+  background: radial-gradient(circle, rgba(255, 218, 112, 0.42), transparent 68%);
+  animation: sun-breathe 8s ease-in-out infinite alternate;
+}
+
+.sun-rays {
+  width: clamp(360px, 46vw, 680px);
+  height: clamp(360px, 46vw, 680px);
+  margin: clamp(-230px, -16vw, -120px);
+  background: repeating-conic-gradient(
+    from 8deg,
+    rgba(255, 218, 119, 0.18) 0deg 7deg,
+    transparent 7deg 22deg
+  );
+  filter: blur(3px);
+  animation: sun-turn 48s linear infinite;
 }
 
 .cloud-layer {
   overflow: hidden;
-  opacity: 0.68;
+  opacity: 0.92;
 }
 
 .cloud-bank {
   position: absolute;
   top: var(--cloud-top);
   left: var(--cloud-left);
-  width: 310px;
-  height: 74px;
+  width: 380px;
+  height: 92px;
   border-radius: 999px;
-  background: rgba(174, 188, 201, 0.34);
+  background: rgba(159, 177, 194, 0.64);
   box-shadow:
-    78px -31px 0 13px rgba(190, 202, 212, 0.4),
-    165px -13px 0 5px rgba(154, 171, 187, 0.32),
-    236px 4px 0 -3px rgba(141, 160, 178, 0.28),
-    92px 20px 0 18px rgba(183, 196, 207, 0.36);
-  filter: blur(17px);
+    94px -38px 0 18px rgba(198, 208, 217, 0.64),
+    198px -17px 0 8px rgba(142, 163, 181, 0.56),
+    290px 5px 0 -2px rgba(128, 150, 170, 0.5),
+    112px 26px 0 22px rgba(176, 192, 205, 0.58);
+  filter: blur(10px);
   transform: translate3d(-8vw, 0, 0) scale(var(--cloud-scale));
   animation: cloud-drift var(--cloud-duration) linear var(--cloud-delay) infinite;
 }
 
 .weather-overlay--rain .cloud-layer {
-  opacity: 0.46;
+  opacity: 0.68;
 }
 
 .rain-drop {
   position: absolute;
   top: -40px;
   left: var(--drop-x);
-  width: 1px;
+  width: 1.4px;
   height: var(--drop-length);
   border-radius: 999px;
-  background: rgba(86, 132, 174, var(--drop-opacity));
+  background: rgba(40, 100, 158, var(--drop-opacity));
+  box-shadow: 0 0 3px rgba(72, 133, 188, 0.26);
   transform: rotate(12deg);
   animation: rain-fall var(--drop-duration) linear var(--drop-delay) infinite;
 }
@@ -216,8 +276,8 @@ const cloudBanks = Array.from({ length: 4 }, (_, index) => ({
 
 .weather-overlay-caption {
   position: absolute;
-  right: max(16px, env(safe-area-inset-right));
-  bottom: max(16px, env(safe-area-inset-bottom));
+  right: max(18px, env(safe-area-inset-right));
+  bottom: max(18px, env(safe-area-inset-bottom));
   display: flex;
   min-height: 44px;
   align-items: center;
@@ -225,7 +285,7 @@ const cloudBanks = Array.from({ length: 4 }, (_, index) => ({
   padding: 8px 14px;
   border: 1px solid rgba(255, 255, 255, 0.72);
   border-radius: 999px;
-  background: rgba(248, 250, 252, 0.7);
+  background: rgba(248, 250, 252, 0.84);
   box-shadow: 0 8px 28px rgba(29, 42, 54, 0.1);
   color: #354454;
   font-size: 12px;
@@ -266,6 +326,19 @@ const cloudBanks = Array.from({ length: 4 }, (_, index) => ({
   }
 }
 
+@keyframes sun-breathe {
+  to {
+    transform: scale(1.08);
+    opacity: 0.76;
+  }
+}
+
+@keyframes sun-turn {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 .weather-overlay-fade-enter-active,
 .weather-overlay-fade-leave-active {
   transition: opacity 260ms ease-out;
@@ -289,7 +362,7 @@ const cloudBanks = Array.from({ length: 4 }, (_, index) => ({
   }
 
   .cloud-layer {
-    opacity: 0.3;
+    opacity: 0.72;
   }
 }
 
@@ -300,7 +373,9 @@ const cloudBanks = Array.from({ length: 4 }, (_, index) => ({
   }
 
   .cloud-bank,
-  .fog-layer span {
+  .fog-layer span,
+  .sun-rays,
+  .sun-glow {
     animation: none;
   }
 

@@ -31,9 +31,33 @@ const templateStatus = ref('')
 let guidanceTimer
 
 const quickTemplates = [
-  { id: 'seoul-am', city: '서울', originId: 'seoul', hour: 10, maxTravelMinutes: 120 },
-  { id: 'changwon-pm', city: '창원', originId: 'changwon', hour: 13, maxTravelMinutes: 180 },
-  { id: 'gwangju-evening', city: '광주', originId: 'gwangju', hour: 19, maxTravelMinutes: 240 },
+  {
+    id: 'seoul-am',
+    label: '가볍게 시작하기',
+    city: '서울',
+    originId: 'seoul',
+    hour: 10,
+    maxTravelMinutes: 120,
+    tone: 'morning',
+  },
+  {
+    id: 'changwon-pm',
+    label: '오후 나들이 보기',
+    city: '창원',
+    originId: 'changwon',
+    hour: 13,
+    maxTravelMinutes: 180,
+    tone: 'afternoon',
+  },
+  {
+    id: 'gwangju-evening',
+    label: '저녁 출발 살펴보기',
+    city: '광주',
+    originId: 'gwangju',
+    hour: 19,
+    maxTravelMinutes: 240,
+    tone: 'evening',
+  },
 ]
 
 function tomorrowAt(hour) {
@@ -112,18 +136,22 @@ onBeforeUnmount(() => window.clearTimeout(guidanceTimer))
 
     <section class="quick-start" aria-labelledby="quick-start-title">
       <div>
-        <h3 id="quick-start-title">빠른 설정</h3>
-        <p>출발 조건만 채웁니다. 활동은 직접 선택합니다.</p>
+        <h3 id="quick-start-title">예시로 바로 시작하기</h3>
+        <p>출발 조건이 자동으로 채워집니다. 다음에 하고 싶은 활동만 고르면 됩니다.</p>
       </div>
       <div class="template-list">
         <button
           v-for="template in quickTemplates"
           :key="template.id"
+          :class="`is-${template.tone}`"
           type="button"
           @click="applyQuickTemplate(template)"
         >
-          <strong>{{ template.city }} {{ String(template.hour).padStart(2, '0') }}:00</strong>
-          <span>내일 · 최대 {{ template.maxTravelMinutes / 60 }}시간</span>
+          <span class="template-label">{{ template.label }}</span>
+          <strong
+            >{{ template.city }} · 내일 {{ String(template.hour).padStart(2, '0') }}:00</strong
+          >
+          <span>최대 {{ template.maxTravelMinutes / 60 }}시간 안에서 추천</span>
         </button>
       </div>
     </section>
@@ -225,7 +253,7 @@ onBeforeUnmount(() => window.clearTimeout(guidanceTimer))
   margin-bottom: 20px;
   border: 1px solid color-mix(in srgb, var(--line) 80%, white);
   border-radius: 18px;
-  background: rgba(248, 250, 253, 0.76);
+  background: rgba(248, 250, 253, 0.9);
   backdrop-filter: blur(16px) saturate(130%);
 }
 
@@ -254,12 +282,12 @@ onBeforeUnmount(() => window.clearTimeout(guidanceTimer))
 .template-list button {
   min-height: 62px;
   padding: 10px 12px;
-  border: 1px solid rgba(116, 133, 153, 0.28);
+  border: 1px solid var(--template-border);
   border-radius: 14px;
-  background: rgba(255, 255, 255, 0.82);
+  background: var(--template-background);
   color: var(--ink);
   text-align: left;
-  box-shadow: 0 8px 22px rgba(22, 34, 48, 0.05);
+  box-shadow: 0 8px 22px rgba(22, 34, 48, 0.07);
   transition:
     transform 140ms ease,
     border-color 140ms ease,
@@ -267,8 +295,8 @@ onBeforeUnmount(() => window.clearTimeout(guidanceTimer))
 }
 
 .template-list button:hover {
-  border-color: rgba(37, 99, 168, 0.48);
-  background: #fff;
+  border-color: var(--template-accent);
+  background: var(--template-hover);
 }
 
 .template-list button:active {
@@ -281,13 +309,42 @@ onBeforeUnmount(() => window.clearTimeout(guidanceTimer))
 }
 
 .template-list strong {
-  font-size: 13px;
+  margin-top: 9px;
+  font-size: 14px;
 }
 
 .template-list span {
   margin-top: 4px;
   color: var(--muted);
   font-size: 12px;
+}
+
+.template-list .template-label {
+  margin: 0;
+  color: var(--template-accent);
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.template-list .is-morning {
+  --template-accent: #2466ad;
+  --template-border: rgba(60, 123, 189, 0.35);
+  --template-background: rgba(226, 240, 255, 0.88);
+  --template-hover: rgba(237, 247, 255, 0.98);
+}
+
+.template-list .is-afternoon {
+  --template-accent: #8b5b08;
+  --template-border: rgba(194, 143, 48, 0.38);
+  --template-background: rgba(255, 244, 209, 0.9);
+  --template-hover: rgba(255, 249, 226, 0.98);
+}
+
+.template-list .is-evening {
+  --template-accent: #6555a2;
+  --template-border: rgba(112, 94, 169, 0.34);
+  --template-background: rgba(237, 233, 252, 0.9);
+  --template-hover: rgba(246, 243, 255, 0.98);
 }
 
 .form-heading h2,

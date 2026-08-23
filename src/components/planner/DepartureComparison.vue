@@ -5,6 +5,7 @@ import { useConfigStore } from '../../stores/configStore'
 import { formatTemperature } from '../../utils/temperature'
 
 const props = defineProps({ alternatives: { type: Array, required: true } })
+defineEmits(['select'])
 
 const configStore = useConfigStore()
 const bestScore = computed(() => Math.max(...props.alternatives.map((item) => item.score)))
@@ -26,15 +27,19 @@ function temperatureText(value) {
   <section class="departure-comparison">
     <div class="section-heading">
       <div>
-        <h2>경로보다 시간을 바꾸는 게 나을까요?</h2>
+        <h2>출발 시간을 바꿔 볼까요?</h2>
+        <p>같은 목적지의 도착 날씨를 비교했습니다. 시간을 누르면 그 조건으로 다시 추천합니다.</p>
       </div>
     </div>
 
     <div class="time-grid">
-      <article
+      <button
         v-for="item in alternatives"
         :key="item.delay"
+        type="button"
         :class="{ best: item.score === bestScore }"
+        :aria-label="`${formatTime(item.departureAt)} 출발 조건으로 다시 추천`"
+        @click="$emit('select', item)"
       >
         <p>{{ item.delay === 0 ? '선택한 시간' : `${item.delay / 60}시간 늦게` }}</p>
         <strong>{{ formatTime(item.departureAt) }} 출발</strong>
@@ -56,8 +61,9 @@ function temperatureText(value) {
             <dd>{{ item.score }}점</dd>
           </div>
         </dl>
-        <span v-if="item.score === bestScore" class="best-label">가장 나은 시간</span>
-      </article>
+        <span v-if="item.score === bestScore" class="best-label">현재 비교에서 가장 적합</span>
+        <span class="apply-label">이 시간으로 다시 보기 →</span>
+      </button>
     </div>
   </section>
 </template>
@@ -80,6 +86,13 @@ function temperatureText(value) {
   margin: 0;
 }
 
+.section-heading p {
+  margin: 7px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
 .section-heading h2 {
   font-size: 22px;
   letter-spacing: -0.04em;
@@ -91,25 +104,38 @@ function temperatureText(value) {
   gap: 10px;
 }
 
-article {
+article,
+.time-grid > button {
   position: relative;
   padding: 20px;
   border: 1px solid var(--line);
   border-radius: var(--radius-control);
 }
 
-article.best {
+.time-grid > button {
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  text-align: left;
+}
+
+.time-grid > button:hover {
+  border-color: var(--accent);
+  background: rgba(237, 245, 253, 0.72);
+}
+
+.time-grid > button.best {
   border-color: var(--ink);
   background: var(--soft);
 }
 
-article > p {
+.time-grid > button > p {
   margin: 0 0 7px;
   color: var(--muted);
   font-size: 13px;
 }
 
-article > strong {
+.time-grid > button > strong {
   font-size: 19px;
 }
 
@@ -136,6 +162,14 @@ dd {
   display: inline-block;
   margin-top: 14px;
   color: var(--accent);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.apply-label {
+  display: block;
+  margin-top: 8px;
+  color: var(--ink);
   font-size: 12px;
   font-weight: 800;
 }

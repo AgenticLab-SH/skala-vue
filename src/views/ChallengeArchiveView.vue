@@ -305,12 +305,19 @@ onMounted(() => focusChallenge(route.hash))
 }
 
 .chapter-index {
+  position: sticky;
+  z-index: 7;
+  top: 92px;
   display: flex;
   flex-wrap: wrap;
   gap: 10px 18px;
-  padding: 12px 0;
-  border-top: 1px solid var(--ink);
-  border-bottom: 1px solid var(--line-strong);
+  padding: 10px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.78);
+  border-radius: 16px;
+  background: rgba(248, 250, 252, 0.9);
+  box-shadow: 0 10px 26px rgba(23, 35, 48, 0.1);
+  backdrop-filter: blur(20px) saturate(145%);
+  -webkit-backdrop-filter: blur(20px) saturate(145%);
 }
 
 .chapter-index a {
@@ -323,7 +330,7 @@ onMounted(() => focusChallenge(route.hash))
 .challenge-section,
 .practice-section {
   margin-top: 42px;
-  scroll-margin-top: 108px;
+  scroll-margin-top: 176px;
 }
 
 .challenge-section:focus {
@@ -370,6 +377,27 @@ h2 {
 
   h2 {
     font-size: 21px;
+  }
+
+  .chapter-index {
+    top: 126px;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    gap: 16px;
+    scrollbar-width: none;
+  }
+
+  .chapter-index::-webkit-scrollbar {
+    display: none;
+  }
+
+  .chapter-index a {
+    flex: 0 0 auto;
+  }
+
+  .challenge-section,
+  .practice-section {
+    scroll-margin-top: 202px;
   }
 }
 </style>
