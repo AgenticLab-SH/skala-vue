@@ -6,29 +6,34 @@ const lessons = [
     use: '출발 조건과 API 상태는 ref로 관리하고, 선택한 도시와 추천 결과는 computed로 계산했습니다.',
   },
   {
-    pages: '146~177쪽',
+    pages: '146~178쪽',
     topic: '컴포넌트, Props·Emits, Slot',
     use: '입력 폼, 추천 결과, 후보 목록, 시간 비교와 경로 지도를 컴포넌트로 나눠 연결했습니다.',
   },
   {
-    pages: '178~197쪽',
+    pages: '179~197쪽',
     topic: 'Vue Router',
     use: '이동 추천, 도시별 날씨, 상세 화면, 구현 기록과 수업 실습 기록을 경로로 분리했습니다.',
   },
   {
-    pages: '198~211쪽',
+    pages: '198~212쪽',
     topic: 'Pinia',
     use: '온도 단위, 관심 도시, 마지막 출발 조건과 날씨 효과 설정을 화면 사이에서 유지했습니다.',
   },
   {
-    pages: '212~229쪽',
+    pages: '213~230쪽',
     topic: 'Axios',
-    use: '날씨와 경로 API를 요청하고 제공자마다 다른 응답을 서비스에서 쓰는 형태로 정리했습니다.',
+    use: 'OpenWeather 동기화와 날씨 파일 조회, 경로 API 요청을 Axios로 분리하고 응답을 화면에서 쓰는 형태로 정리했습니다.',
   },
   {
-    pages: '230~273쪽',
-    topic: 'UI 라이브러리와 빌드 환경',
-    use: 'Element Plus는 필요한 컴포넌트만 등록하고, 환경별 빌드와 GitHub Pages 배포를 확인했습니다.',
+    pages: '231~249쪽',
+    topic: 'UI 라이브러리',
+    use: 'Element Plus는 필요한 폼·입력·알림 컴포넌트만 등록해 실습과 서비스 화면에 적용했습니다.',
+  },
+  {
+    pages: '250~274쪽',
+    topic: 'Vite 빌드와 배포',
+    use: 'ESLint와 Prettier로 점검하고 환경별 빌드와 GitHub Pages 배포를 확인했습니다.',
   },
 ]
 

@@ -370,17 +370,9 @@ h2 {
   margin: 0 0 12px;
 }
 
-@media (max-width: 640px) {
-  .archive-view {
-    padding-top: 36px;
-  }
-
-  h2 {
-    font-size: 21px;
-  }
-
+@media (max-width: 1040px) {
   .chapter-index {
-    top: 126px;
+    top: 142px;
     flex-wrap: nowrap;
     overflow-x: auto;
     gap: 16px;
@@ -397,7 +389,17 @@ h2 {
 
   .challenge-section,
   .practice-section {
-    scroll-margin-top: 202px;
+    scroll-margin-top: 218px;
+  }
+}
+
+@media (max-width: 640px) {
+  .archive-view {
+    padding-top: 36px;
+  }
+
+  h2 {
+    font-size: 21px;
   }
 }
 </style>

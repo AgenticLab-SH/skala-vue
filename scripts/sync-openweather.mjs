@@ -2,7 +2,14 @@ import { mkdir, writeFile } from 'node:fs/promises'
 import { dirname, resolve } from 'node:path'
 import process from 'node:process'
 
+import axios from 'axios'
+
 import { normalizeWeatherCondition } from '../src/utils/weatherCondition.js'
+
+const openWeatherApi = axios.create({
+  baseURL: 'https://api.openweathermap.org',
+  timeout: 15000,
+})
 
 const cities = [
   ['seoul', '서울', 37.5665, 126.978],
@@ -60,19 +67,23 @@ function nearestForecast(forecast, targetTime) {
 }
 
 async function requestJson(path, city, apiKey) {
-  const url = new URL(path, 'https://api.openweathermap.org')
-  url.search = new URLSearchParams({
-    lat: String(city.latitude),
-    lon: String(city.longitude),
-    appid: apiKey,
-    units: 'metric',
-    lang: 'kr',
-  })
-  const response = await fetch(url, { signal: AbortSignal.timeout(15000) })
-  if (!response.ok) {
-    throw new Error(`${city.name} OpenWeather 요청 실패 (${response.status})`)
+  try {
+    const response = await openWeatherApi.get(path, {
+      params: {
+        lat: city.latitude,
+        lon: city.longitude,
+        appid: apiKey,
+        units: 'metric',
+        lang: 'kr',
+      },
+    })
+    return response.data
+  } catch (error) {
+    const status = axios.isAxiosError(error) ? error.response?.status : null
+    const statusText = status ? ` (${status})` : ''
+    // Axios 오류 객체에는 요청 설정이 포함되므로 키가 로그에 섞이지 않게 필요한 상태만 남깁니다.
+    throw new Error(`${city.name} OpenWeather 요청 실패${statusText}`, { cause: error })
   }
-  return response.json()
 }
 
 async function requestCity(city, apiKey) {
@@ -91,22 +102,32 @@ async function requestCity(city, apiKey) {
   }
 }
 
-const apiKey = process.env.OPENWEATHER_API_KEY?.trim()
-if (!apiKey) throw new Error('OPENWEATHER_API_KEY 값이 비어 있습니다.')
+async function main() {
+  const apiKey = process.env.OPENWEATHER_API_KEY?.trim()
+  if (!apiKey) throw new Error('OPENWEATHER_API_KEY 값이 비어 있습니다.')
 
-const cityEntries = []
-for (const city of cities) {
-  const bundle = await requestCity(city, apiKey)
-  cityEntries.push([city.id, bundle])
+  const cityEntries = []
+  for (const city of cities) {
+    const bundle = await requestCity(city, apiKey)
+    cityEntries.push([city.id, bundle])
+  }
+
+  const outputPath = resolve('public/data/openweather.json')
+  const snapshot = {
+    source: 'OpenWeather',
+    generatedAt: new Date().toISOString(),
+    cities: Object.fromEntries(cityEntries),
+  }
+
+  await mkdir(dirname(outputPath), { recursive: true })
+  await writeFile(outputPath, `${JSON.stringify(snapshot)}\n`, 'utf8')
+  console.log(`OpenWeather snapshot ready: ${cityEntries.length} cities`)
 }
 
-const outputPath = resolve('public/data/openweather.json')
-const snapshot = {
-  source: 'OpenWeather',
-  generatedAt: new Date().toISOString(),
-  cities: Object.fromEntries(cityEntries),
+try {
+  await main()
+} catch (error) {
+  // Axios의 config 전체 대신 키가 빠진 메시지만 Actions 로그에 남깁니다.
+  console.error(error instanceof Error ? error.message : 'OpenWeather 동기화 실패')
+  process.exitCode = 1
 }
-
-await mkdir(dirname(outputPath), { recursive: true })
-await writeFile(outputPath, `${JSON.stringify(snapshot)}\n`, 'utf8')
-console.log(`OpenWeather snapshot ready: ${cityEntries.length} cities`)

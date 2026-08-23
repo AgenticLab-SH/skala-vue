@@ -5,7 +5,6 @@
 - [배포 화면](https://agenticlab-sh.github.io/skala-vue/#/)
 - [GitHub 저장소](https://github.com/AgenticLab-SH/skala-vue)
 - [구현 기록](https://agenticlab-sh.github.io/skala-vue/#/process)
-- [사용한 프롬프트](https://agenticlab-sh.github.io/skala-vue/#/prompts)
 - [수업 실습 기록](https://agenticlab-sh.github.io/skala-vue/#/challenges)
 - [활용자료](https://agenticlab-sh.github.io/skala-vue/#/reference)
 
@@ -48,11 +47,24 @@ PDF에서 `Code Challenge`로 표시된 13개 주제를 모두 실행 화면에 
 | 169~171쪽 Provide / Inject             | 여러 단계 아래 컴포넌트에서 주입값을 받는 실행 예제를 실습 기록에 보존했습니다.                                                 | `ProvideGrandParent.vue`, `ProvideGrandChild.vue`                                      |
 | 172쪽 Props & Emits                    | 입력·추천·후보·지도 컴포넌트에 필요한 값만 props로 보내고 선택·재시도·지도 모드 변경을 emits로 올렸습니다.                      | `PropsEmitsPractice.vue`, `components/planner/`                                        |
 | 177쪽 Slot                             | Default·Named·Scoped Slot을 실습하고 Element Plus 카드 header도 named slot으로 구성했습니다.                                    | `SlotPractice.vue`, `ElementLibraryPractice.vue`                                       |
-| 178~197쪽 Vue Router                   | 이동 추천, 도시별 날씨, 동적 상세, 구현 기록, 사용한 프롬프트, 실습, 활용자료, 404를 경로로 나눴습니다. 실습 목차도 Router hash로 연결했습니다. | `router/index.js`, `App.vue`                                                           |
-| 198~211쪽 Pinia                        | Counter Store를 실습하고 온도 단위·관심 도시·마지막 계획·화면 효과 설정을 전역 store에 저장했습니다.                            | `counter.js`, `configStore.js`                                                         |
-| 212~229쪽 Axios                        | 날씨 GET과 JSON GET·POST·PATCH·DELETE를 실습하고 날씨·경로·일출 API에 base URL, params와 timeout을 적용했습니다.                | `AxiosWeatherPractice.vue`, `AxiosJsonPractice.vue`, `services/`                       |
-| 230~248쪽 Element Plus                 | 폼 검증, 수량·평점, 확인창·진행률을 페이지별로 구현하고 서비스 검색·알림에도 필요한 컴포넌트만 등록했습니다.                    | `ElementLibraryPractice.vue`, `main.js`                                                |
-| 249~273쪽 품질·환경 변수·빌드          | ESLint의 엄격 비교, Prettier, 모드별 `.env`, `dist` 빌드와 GitHub Pages base 경로를 적용했습니다.                               | `CodeQualityPractice.vue`, `EnvironmentInfo.vue`, `vite.config.js`, `deploy-pages.yml` |
+| 179~197쪽 Vue Router                   | 이동 추천, 도시별 날씨, 동적 상세, 구현 기록, 실습, 활용자료와 404를 경로로 나눴습니다. 실습 목차도 Router hash로 연결했습니다.  | `router/index.js`, `App.vue`                                                           |
+| 198~212쪽 Pinia                        | Counter Store를 실습하고 온도 단위·관심 도시·마지막 계획·화면 효과 설정을 전역 store에 저장했습니다.                            | `counter.js`, `configStore.js`                                                         |
+| 213~230쪽 Axios                        | 날씨 GET과 JSON GET·POST·PATCH·DELETE를 실습했습니다. 동기화 스크립트는 Axios의 인스턴스·params·timeout으로 OpenWeather를 요청하고, Vue 앱도 Axios로 결과 파일을 읽습니다. | `AxiosWeatherPractice.vue`, `AxiosJsonPractice.vue`, `weatherApi.js`, `sync-openweather.mjs` |
+| 231~249쪽 UI Libraries                 | 폼 검증, 수량·평점, 확인창·진행률을 페이지별로 구현하고 서비스 검색·알림에도 필요한 Element Plus 컴포넌트만 등록했습니다.       | `ElementLibraryPractice.vue`, `main.js`                                                |
+| 250~274쪽 Vite Build & Deployment      | ESLint의 엄격 비교, Prettier, 모드별 `.env`, `dist` 빌드와 GitHub Pages base 경로를 적용했습니다.                               | `CodeQualityPractice.vue`, `EnvironmentInfo.vue`, `vite.config.js`, `deploy-pages.yml` |
+
+## 종합과제 발전 과정
+
+| PDF | 수업 단계 | 현재 적용 |
+| --- | --- | --- |
+| 116쪽 | Weather Mockup | `v-for`, `v-if`, 한글 입력, 카드 선택과 `.stop`을 적용한 날씨 목업을 만들었습니다. |
+| 145쪽 | Weather Composition | 검색 결과를 `computed`로 만들고 선택 도시와 검색어를 `watch`, `watchEffect`로 확인했습니다. |
+| 178쪽 | Weather Component | 검색·카드·공통 영역을 컴포넌트로 나누고 Props, Emits, Slot과 scoped style을 적용했습니다. |
+| 196쪽 | Weather Router | 메인·검색·동적 상세·404를 지연 로딩 경로로 나누고 프로그래밍 방식 이동을 적용했습니다. |
+| 212쪽 | Weather Store | 온도 단위와 관심 도시, 마지막 계획을 Pinia에서 관리했습니다. |
+| 230쪽 | Weather Axios | OpenWeather 현재·5일 예보와 JSONPlaceholder CRUD를 Axios 실습에 연결했습니다. |
+| 249쪽 | Weather UI Library | Element Plus의 폼, 입력, 알림, 확인창과 진행률을 적용했습니다. |
+| 274쪽 | Weather Deployment | 환경 변수, ESLint, 모드별 빌드와 GitHub Pages 배포를 적용했습니다. |
 
 ## 내가 직접 확장한 부분
 
@@ -130,21 +142,25 @@ OSRM 요청이 실패하면 전체 흐름이 중단됐습니다. `requestDriving
 
 더 자세한 기록은 배포 화면의 [구현 기록](https://agenticlab-sh.github.io/skala-vue/#/process)에 남겼습니다.
 
-## 수업 범위 밖에서 AI의 도움을 받아 적용한 기술
+## 교재에서 배운 기술을 확장한 부분
 
-아래 항목은 PDF에서 직접 다루지 않은 기술입니다. AI로 구현 후보와 오류 원인을 조사한 뒤, 실제 API 응답·공식 예제·브라우저 콘솔과 빌드 결과를 대조해 필요한 부분만 적용했습니다.
+교재에서 시작한 기능을 배포 환경과 실제 사용 흐름에 맞게 넓힐 때 AI의 도움을 받았습니다. 제안된 방법은 API 응답, 공식 예제와 브라우저 결과를 직접 대조한 뒤 적용했습니다.
 
-| 기술                                           | 어떻게 적용했는지                                                                                                                                                                           | 확인한 내용                                                                                                                 |
-| ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
-| MapLibre GL JS·OpenFreeMap                     | OSRM의 GeoJSON 경로를 line layer로 그리고, 목적지 주변의 건물 높이 데이터를 `fill-extrusion`으로 표시했습니다. 같은 건물 데이터로 도착 시각의 그림자 면을 만들어 3D 지도 바닥에 겹쳤습니다. 회전·기울기 범위 입력도 지도 카메라와 연결했습니다. | 2D/3D 전환, 각도 조절, 그림자 레이어와 기준 시각 범례, source·layer 갱신, 건물 데이터 없음과 WebGL·타일 실패 상태를 확인했습니다. |
-| OSRM                                           | 출발지와 후보 도시의 자동차 경로·거리·시간·전체 좌표와 최대 3개 경로 대안을 요청했습니다. 실패하면 직선거리 기반 추정으로 추천 흐름을 유지했습니다.                                         | 실제 경로와 추정 경로의 출처, 대안이 하나뿐인 상태를 구분했습니다.                                                          |
-| SunCalc·그늘 경로 계산                         | 도착 예상 시각과 목적지 좌표로 태양 고도·방위를 구하고 건물 높이와 `tan(태양 고도)`로 그림자 길이를 계산했습니다. 경로 표본의 그늘 비율에서 추가 시간 감점을 빼 경로를 선택했습니다.        | 해가 진 시각, 건물 높이 없음, 경로 대안 없음, 지도 구간과 경로가 겹치지 않는 상태를 각각 확인하도록 만들었습니다.           |
-| OpenWeather 스냅샷·SunriseSunset.io            | 배포 작업에서 OpenWeather 현재·5일 예보를 생성하고, 도착 예상 시각과 가장 가까운 예보를 선택했습니다. 같은 현재값은 전국 지도의 가까운 표시 지점에도 연결했습니다.                      | 키가 결과물에 남지 않는지, 144개 표시 지점과 모션 복구, 파일 누락 오류와 갱신 시각을 확인했습니다.                           |
-| 비동기 요청 경합 처리                          | `Promise.allSettled()`로 일부 도시 실패를 허용하고 요청 번호를 둬 이전 응답이 최신 결과를 덮지 못하게 했습니다.                                                                             | 활동을 연속 변경한 뒤 마지막 조건만 남는지 확인했습니다.                                                                    |
-| 추천 점수와 기상 지점 모델                     | 활동별 적정 기온·강수·바람·습도 점수에 장소 적합도와 이동 시간 감점을 결합했습니다. 48개 기준 지역은 비교용 144개 모델 지점으로 나눴습니다.                                                 | 점수 산식과 지점 수를 소스에서 다시 계산하고, 레이더·관측 경계가 아니라는 한계를 표시했습니다.                              |
-| Web Storage·접근성·날씨 모션                   | Pinia 상태 일부를 `localStorage`에 저장하고, 지도·화면 효과에는 `aria-pressed`, `pointer-events: none`, `prefers-reduced-motion`을 적용했습니다.                                            | 새로고침 뒤 설정 유지, 키보드 조작과 감소된 모션 상태를 확인했습니다.                                                       |
-| OpenStreetMap Nominatim                        | 활동 장소 이름으로 좌표를 한 번 확인해 저장소의 정적 데이터로 만들었습니다. 서비스 실행 중에는 공개 검색 API를 호출하지 않습니다.                                                       | 국가 범위와 검색 결과를 확인하고, 찾지 못한 장소는 지도·공식 위치를 다시 확인했습니다. 공개 API 사용 정책에 맞춰 요청 간격을 두었습니다. |
-| dotLottie Web·LottieFiles                      | 접속·새로고침 뒤 환영 화면과 사용자가 경로·날씨를 비교할 때만 나타나는 투명 유리 레이어를 Canvas 애니메이션으로 연결했습니다. 원본 재생 시간을 팝업 목적에 맞게 조정하고 WASM 런타임은 Vite 빌드 결과에서 불러오도록 구성했습니다. | 웰컴과 탐색 모션의 한 사이클 완주, 첫 접속 중 두 레이어 미중첩, 작업 완료와 모션 완료의 동기화, 본문 포커스 복귀, 인스턴스 정리와 `prefers-reduced-motion`을 확인했습니다. |
+| 기술 | 수업에서 배운 내용 | AI 도움으로 확장한 내용 | 직접 확인한 것 |
+| --- | --- | --- | --- |
+| OpenWeather·환경 변수 | 날씨 API 호출과 `.env` 분리 | Actions Secret으로 배포 시점에 예보를 받아 키 없는 JSON을 만드는 구조 | Git 이력·production `dist`·공개 JSON에 실제 키가 없는지 확인했습니다. |
+| Promise·비동기 처리 | Promise와 `async`/`await` | `Promise.allSettled()`로 일부 실패를 허용하고 요청 번호로 최신 실행만 반영 | 활동을 연속으로 바꾼 뒤 마지막 조건의 결과만 남는지 확인했습니다. |
+| Pinia·Web Storage | state, getter, action | 온도 단위·관심 도시·마지막 조건·효과 설정을 `localStorage`에 보존 | 새로고침 뒤 설정이 복원되고 잘못된 이전 값은 안전하게 보정되는지 확인했습니다. |
+
+## 교재 밖에서 AI의 도움을 받아 추가한 기술
+
+| 기술 | AI가 도운 부분 | 적용한 내용 | 직접 확인한 것 |
+| --- | --- | --- | --- |
+| MapLibre GL JS·OpenFreeMap·OSRM | 지도 source·layer와 경로 대안 구조 조사 | 실제 이동선, 3D 건물, 빠른 경로와 그늘 경로를 표시 | 지도 각도, 경로 실패, 대안 한 개와 WebGL·타일 실패 상태를 확인했습니다. |
+| SunCalc·그늘 계산 | 태양 위치와 건물 그림자 계산 방법 조사 | 도착 시각의 태양 고도·방위와 건물 높이로 그림자 면과 예상 그늘 비율 계산 | 야간, 건물 높이 없음, 지도 구간과 경로가 겹치지 않는 경우를 나눠 확인했습니다. |
+| OpenStreetMap Nominatim | 장소 좌표를 확인하는 방법 조사 | 활동 장소를 한 번 조회해 정적 좌표로 보관 | 검색 결과와 지도 위치를 대조하고 실행 중 재호출이 없는지 확인했습니다. |
+| 추천 점수·144개 기상 지점 | 활동별 비교 기준과 지도 표시 단위 구체화 | 날씨·장소·이동 시간 점수와 48개 기준 지역의 144개 비교 지점 구성 | 활동별 결과와 지점 수를 다시 계산하고 레이더가 아니라는 한계를 표시했습니다. |
+| dotLottie·접근성·날씨 모션 | Vue 생명주기와 완료 이벤트 연결 방법 조사 | 웰컴·탐색 상태, 키보드 포커스, 감소된 모션과 지도 날씨 효과 적용 | 모션 완료·인스턴스 정리·레이어 미중첩·키보드 조작을 확인했습니다. |
 
 ## 활용자료
 
@@ -155,25 +171,47 @@ OSRM 요청이 실패하면 전체 흐름이 중단됐습니다. `requestDriving
 - SunCalc는 도착 시각의 태양 고도·방위 계산, SunriseSunset.io는 일출·일몰 대체 데이터에 사용했습니다.
 - LottieFiles의 [Map Animation](https://lottiefiles.com/free-animation/splash-oOdsOknPhV)은 경로·날씨 탐색 중 상태에, [Wellcome Animation](https://lottiefiles.com/free-animation/wellcome-animation-9cXI8Bc0SU)은 접속·새로고침 뒤 환영 화면에 사용했습니다. 두 파일은 [Lottie Simple License](https://lottiefiles.com/page/license)를 확인했습니다.
 
-## 실행 방법
+## 로컬 실행
 
 Node.js `20.19+` 또는 `22.12+`가 필요합니다.
 
 ```bash
 npm ci
-npm run weather:sync # OPENWEATHER_API_KEY 환경 변수가 있을 때 예보 파일 생성
-npm run dev
-npm run build
+cp .env.example .env.local
 ```
 
-로컬에서는 먼저 `npm run weather:sync`로 예보 파일을 만듭니다. `main`에 push하면 GitHub Actions가 Secret의 키로 OpenWeather 예보를 갱신한 다음 production 빌드를 GitHub Pages에 배포합니다. 한 시간마다 같은 작업을 실행해 공개 예보 파일을 다시 만듭니다.
+`.env.local`에 본인이 발급받은 키를 작성합니다.
+
+```env
+OPENWEATHER_API_KEY=발급받은_개인_키
+```
+
+그다음 예보 파일을 만들고 개발 서버를 실행합니다.
+
+```bash
+npm run weather:sync
+npm run dev
+```
+
+품질 검사와 배포용 빌드는 아래 명령으로 확인합니다.
+
+```bash
+npm run lint
+npm run build:production
+```
+
+`.env.local`과 생성된 `public/data/openweather.json`은 Git에 올라가지 않습니다. `main`에 push하면 GitHub Actions가 Secret의 키로 OpenWeather 예보를 갱신한 다음 production 빌드를 GitHub Pages에 배포합니다. 한 시간마다 같은 작업을 실행해 공개 예보 파일을 다시 만듭니다.
 
 ## 제출 전 확인
 
 - `npm run lint`, 기본·staging·production 빌드 통과
-- 홈·도시별 날씨·도시 상세·구현 기록·사용한 프롬프트·수업 실습·활용자료·404 경로 확인
+- 홈·도시별 날씨·도시 상세·구현 기록·수업 실습·활용자료·404 경로 확인
 - 320·390·768·1440px, 200% 확대, 키보드와 reduced motion 확인
 - 공개 저장소와 Pages의 최신 커밋 일치 확인
 - 현재 파일, Git 이력과 `dist`에 실제 API 키가 없는지 확인
+
+## AI 활용 기록 부록
+
+기능을 구체화하면서 사용한 요청 중 실제 구현에 반영한 내용은 [사용한 프롬프트](https://agenticlab-sh.github.io/skala-vue/#/prompts)에 따로 정리했습니다.
 
 예보와 이동 시간은 계획을 돕는 참고 정보입니다. 제주 이동과 API 실패 시 경로는 추정값입니다. 그늘 우선은 도착지 주변 현재 지도에 로드된 건물과 자동차 경로 대안을 비교한 결과이며 보행 안전이나 전체 이동 구간의 그늘을 보장하지 않습니다. 활동 장소의 운영 시간·예약·혼잡도도 출발 전에 별도로 확인해야 합니다.

@@ -2,6 +2,13 @@ import { createRouter, createWebHashHistory } from 'vue-router'
 
 import { weatherCities } from '../data/weatherCities'
 
+function getAnchorTop(routeName) {
+  const compactHeader = window.matchMedia('(max-width: 1040px)').matches
+  if (routeName === 'challenge-archive') return compactHeader ? 218 : 176
+  if (routeName === 'prompt-archive') return compactHeader ? 206 : 156
+  return 108
+}
+
 const router = createRouter({
   // 정적 GitHub Pages에서도 새로고침 시 경로가 유지되도록 hash history를 사용합니다.
   history: createWebHashHistory(import.meta.env.BASE_URL),
@@ -9,7 +16,7 @@ const router = createRouter({
     if (savedPosition) return savedPosition
     if (to.hash) {
       const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-      return { el: to.hash, top: 108, behavior: reduceMotion ? 'auto' : 'smooth' }
+      return { el: to.hash, top: getAnchorTop(to.name), behavior: reduceMotion ? 'auto' : 'smooth' }
     }
     return { top: 0 }
   },
