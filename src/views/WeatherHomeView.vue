@@ -188,18 +188,46 @@ onMounted(() => {
           </div>
         </div>
 
-        <RecommendationHero
-          :recommendation="planner.selectedRecommendation.value"
-          :origin-name="origin.name"
-          :activity-id="activityId"
-          @open-detail="openDetail(planner.selectedRecommendation.value)"
-        />
+        <div class="result-overview">
+          <RecommendationHero
+            :recommendation="planner.selectedRecommendation.value"
+            :origin-name="origin.name"
+            :activity-id="activityId"
+            @open-detail="openDetail(planner.selectedRecommendation.value)"
+          />
+
+          <aside
+            v-if="planner.recommendations.value.length"
+            class="candidate-list"
+            aria-labelledby="candidate-list-title"
+          >
+            <div class="candidate-heading">
+              <div>
+                <h3 id="candidate-list-title">이동 가능한 전체 후보</h3>
+                <span>{{ planner.recommendations.value.length }}곳</span>
+              </div>
+              <small>눌러서 결과 변경</small>
+            </div>
+            <div class="candidate-scroll">
+              <CandidateCard
+                v-for="(item, index) in planner.recommendations.value"
+                :key="item.city.id"
+                :item="item"
+                :rank="index + 1"
+                :selected="item.city.id === planner.selectedRecommendation.value.city.id"
+                compact
+                @select="selectCandidate"
+              />
+            </div>
+          </aside>
+        </div>
 
         <Suspense>
           <RouteMap
             :origin="origin"
             :destination="planner.selectedRecommendation.value.city"
             :route="planner.selectedRecommendation.value.route"
+            :arrival-at="planner.selectedRecommendation.value.arrivalAt"
             :weather-grid="weatherGrid"
             :weather-grid-status="weatherGridStatus"
             :weather-grid-error="weatherGridError"
@@ -210,24 +238,6 @@ onMounted(() => {
             <div class="loading-panel" role="status">경로 지도를 준비하고 있습니다.</div>
           </template>
         </Suspense>
-
-        <div v-if="planner.recommendations.value.length" class="candidate-list">
-          <div class="candidate-heading">
-            <h3>이동 시간 안의 전체 후보</h3>
-            <span
-              >{{ planner.recommendations.value.length }}곳 중 원하는 장소를 선택할 수
-              있습니다.</span
-            >
-          </div>
-          <CandidateCard
-            v-for="(item, index) in planner.recommendations.value"
-            :key="item.city.id"
-            :item="item"
-            :rank="index + 1"
-            :selected="item.city.id === planner.selectedRecommendation.value.city.id"
-            @select="selectCandidate"
-          />
-        </div>
 
         <DepartureComparison :alternatives="planner.timeAlternatives.value" />
 
@@ -335,26 +345,53 @@ onMounted(() => {
   padding: 0 0 3px;
 }
 
+.result-overview {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 310px;
+  align-items: stretch;
+  gap: 16px;
+}
+
 .candidate-list {
-  margin: 32px 0;
+  overflow: hidden;
+  min-width: 0;
+  max-height: 560px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-panel);
+  background: var(--surface);
 }
 
 .candidate-heading {
   display: flex;
-  align-items: flex-end;
+  min-height: 70px;
+  align-items: center;
   justify-content: space-between;
-  gap: 20px;
-  padding-bottom: 16px;
+  gap: 12px;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--line);
 }
 
 .candidate-heading h3 {
   margin: 0;
-  font-size: 20px;
+  font-size: 15px;
+}
+
+.candidate-heading span,
+.candidate-heading small {
+  color: var(--muted);
+  font-size: 11px;
 }
 
 .candidate-heading span {
-  color: var(--muted);
-  font-size: 12px;
+  display: block;
+  margin-top: 3px;
+}
+
+.candidate-scroll {
+  overflow-y: auto;
+  max-height: 489px;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
 }
 
 .plan-b {
@@ -385,9 +422,24 @@ onMounted(() => {
     padding-top: 38px;
   }
 
-  .candidate-heading {
-    align-items: flex-start;
-    flex-direction: column;
+  .result-overview {
+    grid-template-columns: 1fr;
+  }
+
+  .candidate-list,
+  .candidate-scroll {
+    max-height: 440px;
+  }
+}
+
+@media (min-width: 761px) and (max-width: 1080px) {
+  .result-overview {
+    grid-template-columns: 1fr;
+  }
+
+  .candidate-list,
+  .candidate-scroll {
+    max-height: 420px;
   }
 }
 </style>

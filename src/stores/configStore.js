@@ -14,6 +14,15 @@ function readInitialConfig() {
   }
 }
 
+const travelMinuteOptions = new Set([30, 60, 120, 180, 240, 300])
+
+function normalizeTravelMinutes(value) {
+  const minutes = Number(value)
+  if (travelMinuteOptions.has(minutes)) return minutes
+  if (minutes > 300) return 300
+  return 240
+}
+
 export const useConfigStore = defineStore('config', () => {
   const initial = readInitialConfig()
 
@@ -27,7 +36,7 @@ export const useConfigStore = defineStore('config', () => {
   const planner = ref({
     originId: initial.planner?.originId ?? 'seoul',
     activityId: initial.planner?.activityId ?? 'running',
-    maxTravelMinutes: initial.planner?.maxTravelMinutes ?? 240,
+    maxTravelMinutes: normalizeTravelMinutes(initial.planner?.maxTravelMinutes),
   })
 
   const unitSymbol = computed(() => (unit.value === 'celsius' ? '℃' : '℉'))

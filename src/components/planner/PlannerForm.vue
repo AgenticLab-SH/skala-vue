@@ -57,10 +57,12 @@ const emit = defineEmits([
           :value="maxTravelMinutes"
           @change="emit('update:maxTravelMinutes', Number($event.target.value))"
         >
+          <option :value="30">30분</option>
+          <option :value="60">1시간</option>
           <option :value="120">2시간</option>
           <option :value="180">3시간</option>
           <option :value="240">4시간</option>
-          <option :value="360">6시간</option>
+          <option :value="300">5시간</option>
         </select>
       </label>
     </div>

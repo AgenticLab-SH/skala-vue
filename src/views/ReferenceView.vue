@@ -11,9 +11,9 @@
         <h2 id="reference-title">그늘길</h2>
       </div>
       <p>
-        시간과 건물 정보를 지도에 겹쳐 이동 경로를 고르게 하는 문제 설정을 참고했습니다. 구름사이는
-        화면이나 코드를 가져오지 않고, 도착 시각의 날씨와 활동 장소를 비교하는 방식으로 다시
-        설계했습니다.
+        시간과 건물 높이로 그림자를 지도에 표시하는 문제 설정을 참고했습니다. 화면이나 코드를
+        가져오지 않았고, 구름사이는 도착 시각의 그림자와 OSRM 경로 대안을 비교해 도착지 주변 경로를
+        선택하는 기능으로 확장했습니다.
       </p>
       <a href="https://project-g-seven.vercel.app/" target="_blank" rel="noopener noreferrer">
         레퍼런스 사이트 열기 <span aria-hidden="true">↗</span>

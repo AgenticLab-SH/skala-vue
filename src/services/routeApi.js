@@ -37,34 +37,45 @@ export function estimateTravel(from, to) {
   return { distance, minutes, source: '직선거리 기반 추정', geometry }
 }
 
+function withSingleRoute(route) {
+  return { ...route, alternatives: [{ ...route }] }
+}
+
 export async function requestDrivingRoute(from, to) {
   if (from.id === to.id) {
     const localEstimate = estimateTravel(from, to)
-    return {
+    return withSingleRoute({
       ...localEstimate,
       source: '도시 내부 이동 추정',
-    }
+    })
   }
-  if (from.transportMode === 'air' || to.transportMode === 'air') return estimateTravel(from, to)
+  if (from.transportMode === 'air' || to.transportMode === 'air') {
+    return withSingleRoute(estimateTravel(from, to))
+  }
   try {
     const coordinates = `${from.longitude},${from.latitude};${to.longitude},${to.latitude}`
     const response = await routeApi.get(`/route/v1/driving/${coordinates}`, {
       params: {
         overview: 'full',
         geometries: 'geojson',
-        alternatives: 'false',
+        alternatives: 3,
         steps: 'false',
       },
     })
-    const route = response.data.routes?.[0]
-    if (!route) return estimateTravel(from, to)
-    return {
+    const fallback = estimateTravel(from, to)
+    const alternatives = (response.data.routes ?? []).map((route, index) => ({
       distance: Math.round(route.distance / 1000),
       minutes: Math.round(route.duration / 60),
-      source: 'OSRM 경로',
-      geometry: route.geometry?.coordinates ?? estimateTravel(from, to).geometry,
+      source: index === 0 ? 'OSRM 경로' : `OSRM 대안 ${index + 1}`,
+      geometry: route.geometry?.coordinates ?? fallback.geometry,
+    }))
+    const route = alternatives[0]
+    if (!route) return withSingleRoute(fallback)
+    return {
+      ...route,
+      alternatives,
     }
   } catch {
-    return estimateTravel(from, to)
+    return withSingleRoute(estimateTravel(from, to))
   }
 }

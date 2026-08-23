@@ -9,6 +9,7 @@ const props = defineProps({
   item: { type: Object, required: true },
   rank: { type: Number, required: true },
   selected: { type: Boolean, default: false },
+  compact: { type: Boolean, default: false },
 })
 
 defineEmits(['select'])
@@ -26,7 +27,7 @@ const temperatureText = computed(() =>
 <template>
   <button
     class="candidate"
-    :class="{ selected }"
+    :class="{ selected, compact }"
     type="button"
     :aria-pressed="selected"
     @click="$emit('select', item)"
@@ -96,6 +97,45 @@ const temperatureText = computed(() =>
 .candidate.selected {
   background: var(--soft);
   box-shadow: inset 3px 0 var(--accent);
+}
+
+.candidate.compact {
+  grid-template-columns: 30px minmax(0, 1fr);
+  gap: 8px;
+  min-height: 76px;
+  padding: 13px 10px;
+}
+
+.candidate.compact .candidate-main strong {
+  overflow: hidden;
+  font-size: 14px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.candidate.compact .rank,
+.candidate.compact .region,
+.candidate.compact .weather,
+.candidate.compact .candidate-side span {
+  font-size: 11px;
+}
+
+.candidate.compact .weather {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.candidate.compact .candidate-side {
+  grid-column: 2;
+  flex-direction: row;
+  align-items: baseline;
+  justify-content: flex-start;
+  gap: 6px;
+}
+
+.candidate.compact .candidate-side strong {
+  font-size: 15px;
 }
 
 @media (hover: hover) and (pointer: fine) {

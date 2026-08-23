@@ -16,9 +16,9 @@
 
 ## 주요 기능
 
-1. 출발 도시·시각·최대 이동 시간과 활동을 입력해 목적지를 비교합니다.
-2. 출발 지역을 포함해 이동 시간 안의 전체 후보를 보여 주고, 선택한 장소의 추천·지도·시간 비교를 갱신합니다.
-3. OSRM 경로와 추정 경로를 구분하고 MapLibre 지도에 이동선과 3D 건물을 표시합니다.
+1. 출발 도시·시각·30분~5시간의 최대 이동 시간과 활동을 입력해 목적지를 비교합니다.
+2. 출발 지역을 포함해 이동 시간 안의 전체 후보를 대표 추천 옆에 보여 주고, 선택한 장소의 추천·지도·시간 비교를 갱신합니다.
+3. OSRM 경로와 추정 경로를 구분하고 MapLibre 지도에 이동선과 3D 건물을 표시합니다. 도착지 주변에서는 도착 시각의 태양각과 건물 높이로 그림자를 만들고 경로 대안을 비교할 수 있습니다.
 4. 도시 검색, 시간대별 예보, 일출·일몰, 관심 도시와 온도 단위를 제공합니다.
 5. 48개 기준 지역의 144개 기상 지점과 비·흐림 상태를 지도에서 확인합니다.
 
@@ -26,29 +26,30 @@
 
 PDF에서 `Code Challenge`로 표시된 13개 주제를 모두 실행 화면에 남겼습니다. 한 주제 안에서 페이지가 나뉜 UI Libraries 246~248쪽과 Build 270~273쪽도 각각 바로 이동할 수 있어, 목차에는 18개 페이지가 표시됩니다.
 
-| PDF 범위와 수업 내용 | 서비스와 실습에 적용한 곳 | 주요 파일 |
-| --- | --- | --- |
-| 72쪽 반응성·텍스트 보간 | 일반 변수와 `ref`의 차이를 비교하고, 서비스의 상태 문구와 수치를 보간했습니다. | `SampleOne.vue`, `SampleTwo.vue`, `WeatherHomeView.vue` |
-| 93쪽 Vue 디렉티브 | `v-if`로 로딩·오류·빈 결과를 나누고, `v-for`로 후보를 반복하며, `v-bind`로 상태와 속성을 연결했습니다. | `DirectivePractice.vue`, `WeatherHomeView.vue`, `CandidateCard.vue` |
-| 105쪽 이벤트 | 클릭·제출·이벤트 객체·수식어를 실습하고 추천 폼은 `@submit.prevent`, 후보는 사용자 선택 이벤트로 처리했습니다. | `EventPractice.vue`, `PlannerForm.vue`, `CandidateCard.vue` |
-| 115쪽 폼과 스타일 | `v-model`의 입력 요소·수식어를 실습하고 출발지·날짜·시간·활동 입력을 폼으로 구성했습니다. 전역·scoped 스타일 역할도 나눴습니다. | `FormStylePractice.vue`, `PlannerForm.vue`, `main.css` |
-| 126쪽 `ref`·`reactive` | 입력값과 API 상태는 `ref`, 묶인 실습 객체는 `reactive`로 관리했습니다. | `ReactivePractice.vue`, `WeatherHomeView.vue` |
-| 144쪽 `computed`·`watch`·`watchEffect` | 표시용 파생값과 선택 추천을 `computed`로 만들고, 계획 조건·지도 데이터 변경은 `watch`로 연결했습니다. | `ComputedWatchPractice.vue`, `useTripPlanner.js`, `RouteMap.vue` |
-| 155쪽 Lifecycle Hook | 실습 타이머와 지도 인스턴스를 mount 때 만들고 unmount 때 타이머·팝업·지도를 정리했습니다. | `LifecyclePractice.vue`, `RouteMap.vue` |
-| 169~171쪽 Provide / Inject | 여러 단계 아래 컴포넌트에서 주입값을 받는 실행 예제를 실습 기록에 보존했습니다. | `ProvideGrandParent.vue`, `ProvideGrandChild.vue` |
-| 172쪽 Props & Emits | 입력·추천·후보·지도 컴포넌트에 필요한 값만 props로 보내고 선택·재시도·지도 모드 변경을 emits로 올렸습니다. | `PropsEmitsPractice.vue`, `components/planner/` |
-| 177쪽 Slot | Default·Named·Scoped Slot을 실습하고 Element Plus 카드 header도 named slot으로 구성했습니다. | `SlotPractice.vue`, `ElementLibraryPractice.vue` |
-| 178~197쪽 Vue Router | 이동 추천, 도시 검색, 동적 상세, 구현 과정, 실습, 레퍼런스, 404를 경로로 나눴습니다. 실습 목차도 Router hash로 연결했습니다. | `router/index.js`, `App.vue` |
-| 198~211쪽 Pinia | Counter Store를 실습하고 온도 단위·관심 도시·마지막 계획·화면 효과 설정을 전역 store에 저장했습니다. | `counter.js`, `configStore.js` |
-| 212~229쪽 Axios | 날씨 GET과 JSON GET·POST·PATCH·DELETE를 실습하고 날씨·경로·일출 API에 base URL, params와 timeout을 적용했습니다. | `AxiosWeatherPractice.vue`, `AxiosJsonPractice.vue`, `services/` |
-| 230~248쪽 Element Plus | 폼 검증, 수량·평점, 확인창·진행률을 페이지별로 구현하고 서비스 검색·알림에도 필요한 컴포넌트만 등록했습니다. | `ElementLibraryPractice.vue`, `main.js` |
-| 249~273쪽 품질·환경 변수·빌드 | ESLint의 엄격 비교, Prettier, 모드별 `.env`, `dist` 빌드와 GitHub Pages base 경로를 적용했습니다. | `CodeQualityPractice.vue`, `EnvironmentInfo.vue`, `vite.config.js`, `deploy-pages.yml` |
+| PDF 범위와 수업 내용                   | 서비스와 실습에 적용한 곳                                                                                                       | 주요 파일                                                                              |
+| -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| 72쪽 반응성·텍스트 보간                | 일반 변수와 `ref`의 차이를 비교하고, 서비스의 상태 문구와 수치를 보간했습니다.                                                  | `SampleOne.vue`, `SampleTwo.vue`, `WeatherHomeView.vue`                                |
+| 93쪽 Vue 디렉티브                      | `v-if`로 로딩·오류·빈 결과를 나누고, `v-for`로 후보를 반복하며, `v-bind`로 상태와 속성을 연결했습니다.                          | `DirectivePractice.vue`, `WeatherHomeView.vue`, `CandidateCard.vue`                    |
+| 105쪽 이벤트                           | 클릭·제출·이벤트 객체·수식어를 실습하고 추천 폼은 `@submit.prevent`, 후보는 사용자 선택 이벤트로 처리했습니다.                  | `EventPractice.vue`, `PlannerForm.vue`, `CandidateCard.vue`                            |
+| 115쪽 폼과 스타일                      | `v-model`의 입력 요소·수식어를 실습하고 출발지·날짜·시간·활동 입력을 폼으로 구성했습니다. 전역·scoped 스타일 역할도 나눴습니다. | `FormStylePractice.vue`, `PlannerForm.vue`, `main.css`                                 |
+| 126쪽 `ref`·`reactive`                 | 입력값과 API 상태는 `ref`, 묶인 실습 객체는 `reactive`로 관리했습니다.                                                          | `ReactivePractice.vue`, `WeatherHomeView.vue`                                          |
+| 144쪽 `computed`·`watch`·`watchEffect` | 표시용 파생값과 선택 추천을 `computed`로 만들고, 계획 조건·지도 데이터 변경은 `watch`로 연결했습니다.                           | `ComputedWatchPractice.vue`, `useTripPlanner.js`, `RouteMap.vue`                       |
+| 155쪽 Lifecycle Hook                   | 실습 타이머와 지도 인스턴스를 mount 때 만들고 unmount 때 타이머·팝업·지도를 정리했습니다.                                       | `LifecyclePractice.vue`, `RouteMap.vue`                                                |
+| 169~171쪽 Provide / Inject             | 여러 단계 아래 컴포넌트에서 주입값을 받는 실행 예제를 실습 기록에 보존했습니다.                                                 | `ProvideGrandParent.vue`, `ProvideGrandChild.vue`                                      |
+| 172쪽 Props & Emits                    | 입력·추천·후보·지도 컴포넌트에 필요한 값만 props로 보내고 선택·재시도·지도 모드 변경을 emits로 올렸습니다.                      | `PropsEmitsPractice.vue`, `components/planner/`                                        |
+| 177쪽 Slot                             | Default·Named·Scoped Slot을 실습하고 Element Plus 카드 header도 named slot으로 구성했습니다.                                    | `SlotPractice.vue`, `ElementLibraryPractice.vue`                                       |
+| 178~197쪽 Vue Router                   | 이동 추천, 도시 검색, 동적 상세, 구현 과정, 실습, 레퍼런스, 404를 경로로 나눴습니다. 실습 목차도 Router hash로 연결했습니다.    | `router/index.js`, `App.vue`                                                           |
+| 198~211쪽 Pinia                        | Counter Store를 실습하고 온도 단위·관심 도시·마지막 계획·화면 효과 설정을 전역 store에 저장했습니다.                            | `counter.js`, `configStore.js`                                                         |
+| 212~229쪽 Axios                        | 날씨 GET과 JSON GET·POST·PATCH·DELETE를 실습하고 날씨·경로·일출 API에 base URL, params와 timeout을 적용했습니다.                | `AxiosWeatherPractice.vue`, `AxiosJsonPractice.vue`, `services/`                       |
+| 230~248쪽 Element Plus                 | 폼 검증, 수량·평점, 확인창·진행률을 페이지별로 구현하고 서비스 검색·알림에도 필요한 컴포넌트만 등록했습니다.                    | `ElementLibraryPractice.vue`, `main.js`                                                |
+| 249~273쪽 품질·환경 변수·빌드          | ESLint의 엄격 비교, Prettier, 모드별 `.env`, `dist` 빌드와 GitHub Pages base 경로를 적용했습니다.                               | `CodeQualityPractice.vue`, `EnvironmentInfo.vue`, `vite.config.js`, `deploy-pages.yml` |
 
 ## 내가 직접 확장한 부분
 
 - 현재 날씨 카드에서 도착 예상 시각의 예보를 비교하는 이동 추천으로 확장했습니다.
 - 18개 도시에 활동별 장소를 따로 두었습니다. 출발 도시도 후보에서 제외하지 않으며, 이동 시간 안에 남은 후보를 전부 보여 줍니다. 추천 점수는 날씨 82%와 장소 적합도 18%를 합친 뒤 이동 시간을 반영하며, 바다는 해안 장소가 있는 도시만 비교합니다.
 - OSRM 요청이 실패해도 직선거리 기반 시간과 추정선을 남겨 날씨 추천을 계속 볼 수 있게 했습니다.
+- 그늘길의 문제 설정에서 한 단계 더 나아가, 도착 시각의 태양 고도·방위와 지도 건물 높이로 그림자를 계산했습니다. OSRM 경로 대안이 여러 개면 표시 구간의 그늘 비율과 추가 시간을 함께 비교합니다.
 - 전국 48개 기준 지역을 중심권·북동권·남서권의 144개 지점으로 나눠 현재 강수량과 운량을 지도에 표시했습니다. 이 값은 행정구역 경계나 기상 레이더가 아닌 비교용 모델 지점입니다.
 - 온도 단위, 관심 도시, 마지막 출발 조건, 날씨 효과 설정을 Pinia와 `localStorage`에 저장했습니다.
 
@@ -72,24 +73,29 @@ OSRM 요청이 실패하면 전체 흐름이 중단됐습니다. `requestDriving
 
 건물 높이와 기상 지점 투명도 식에서 `zoom`을 잘못 중첩했습니다. 확대 보간을 표현식 바깥으로 옮기고 건물 바닥 높이는 데이터 값을 바로 읽게 수정했습니다. 2D/3D 전환과 비·흐림 지점 수를 다시 비교하고 콘솔 오류가 없는지 확인했습니다. 지도는 source, layer, expression의 역할을 나눠 확인해야 디버깅하기 쉬웠습니다.
 
+### 그늘이 있어도 경로를 비교할 수 없었습니다
+
+처음에는 3D 건물과 그림자만 그리면 경로를 고를 수 있다고 생각했습니다. 하지만 한 경로만 요청한 상태에서는 비교 대상이 없었습니다. OSRM 요청에 경로 대안을 추가하고, 각 경로에서 현재 지도 안에 들어온 좌표를 표본으로 뽑아 그림자 안에 있는 비율을 계산했습니다. 10분을 더 이동하려면 그늘이 15%p 이상 늘어야 선택되도록 추가 시간 감점도 넣었습니다. 대안이나 건물 높이 데이터가 없을 때는 억지로 결과를 만들지 않고 빠른 경로를 유지하게 했습니다.
+
 더 자세한 실패·수정 기록은 배포 화면의 [구현 과정](https://agenticlab-sh.github.io/skala-vue/#/process)에 남겼습니다.
 
 ## 수업 범위 밖에서 AI의 도움을 받아 적용한 기술
 
 아래 항목은 PDF에서 직접 다루지 않은 기술입니다. AI로 구현 후보와 오류 원인을 조사한 뒤, 실제 API 응답·공식 예제·브라우저 콘솔과 빌드 결과를 대조해 필요한 부분만 적용했습니다.
 
-| 기술 | 어떻게 적용했는지 | 확인한 내용 |
-| --- | --- | --- |
-| MapLibre GL JS·OpenFreeMap | OSRM의 GeoJSON 경로를 line layer로 그리고, 목적지 주변의 건물 높이 데이터를 `fill-extrusion`으로 표시했습니다. | 2D/3D 전환, source·layer 갱신, WebGL·타일 실패 시 텍스트 대체 상태를 확인했습니다. |
-| OSRM | 출발지와 후보 도시의 자동차 경로·거리·시간·전체 좌표를 요청했습니다. 실패하면 직선거리 기반 추정으로 추천 흐름을 유지했습니다. | 실제 경로와 추정 경로의 출처 문구가 구분되는지 확인했습니다. |
-| Open-Meteo·SunriseSunset.io | 공개 배포에서 키 없이 현재·시간대별 예보와 일출·일몰을 요청했습니다. 도착 예상 시각과 가장 가까운 예보를 선택했습니다. | API 일부 실패, 빈 응답과 갱신 시각을 확인했습니다. |
-| 비동기 요청 경합 처리 | `Promise.allSettled()`로 일부 도시 실패를 허용하고 요청 번호를 둬 이전 응답이 최신 결과를 덮지 못하게 했습니다. | 활동을 연속 변경한 뒤 마지막 조건만 남는지 확인했습니다. |
-| 추천 점수와 기상 지점 모델 | 활동별 적정 기온·강수·바람·습도 점수에 장소 적합도와 이동 시간 감점을 결합했습니다. 48개 기준 지역은 비교용 144개 모델 지점으로 나눴습니다. | 점수 산식과 지점 수를 소스에서 다시 계산하고, 레이더·관측 경계가 아니라는 한계를 표시했습니다. |
-| Web Storage·접근성·날씨 모션 | Pinia 상태 일부를 `localStorage`에 저장하고, 지도·화면 효과에는 `aria-pressed`, `pointer-events: none`, `prefers-reduced-motion`을 적용했습니다. | 새로고침 뒤 설정 유지, 키보드 조작과 감소된 모션 상태를 확인했습니다. |
+| 기술                         | 어떻게 적용했는지                                                                                                                                                                    | 확인한 내용                                                                                                       |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------- |
+| MapLibre GL JS·OpenFreeMap   | OSRM의 GeoJSON 경로를 line layer로 그리고, 목적지 주변의 건물 높이 데이터를 `fill-extrusion`으로 표시했습니다. 같은 건물 데이터로 도착 시각의 그림자 면을 만들어 지도에 겹쳤습니다.  | 2D/3D 전환, source·layer 갱신, 건물 데이터 없음과 WebGL·타일 실패 시 대체 상태를 확인했습니다.                    |
+| OSRM                         | 출발지와 후보 도시의 자동차 경로·거리·시간·전체 좌표와 최대 3개 경로 대안을 요청했습니다. 실패하면 직선거리 기반 추정으로 추천 흐름을 유지했습니다.                                  | 실제 경로와 추정 경로의 출처, 대안이 하나뿐인 상태를 구분했습니다.                                                |
+| SunCalc·그늘 경로 계산       | 도착 예상 시각과 목적지 좌표로 태양 고도·방위를 구하고 건물 높이와 `tan(태양 고도)`로 그림자 길이를 계산했습니다. 경로 표본의 그늘 비율에서 추가 시간 감점을 빼 경로를 선택했습니다. | 해가 진 시각, 건물 높이 없음, 경로 대안 없음, 지도 구간과 경로가 겹치지 않는 상태를 각각 확인하도록 만들었습니다. |
+| Open-Meteo·SunriseSunset.io  | 공개 배포에서 키 없이 현재·시간대별 예보와 일출·일몰을 요청했습니다. 도착 예상 시각과 가장 가까운 예보를 선택했습니다.                                                               | API 일부 실패, 빈 응답과 갱신 시각을 확인했습니다.                                                                |
+| 비동기 요청 경합 처리        | `Promise.allSettled()`로 일부 도시 실패를 허용하고 요청 번호를 둬 이전 응답이 최신 결과를 덮지 못하게 했습니다.                                                                      | 활동을 연속 변경한 뒤 마지막 조건만 남는지 확인했습니다.                                                          |
+| 추천 점수와 기상 지점 모델   | 활동별 적정 기온·강수·바람·습도 점수에 장소 적합도와 이동 시간 감점을 결합했습니다. 48개 기준 지역은 비교용 144개 모델 지점으로 나눴습니다.                                          | 점수 산식과 지점 수를 소스에서 다시 계산하고, 레이더·관측 경계가 아니라는 한계를 표시했습니다.                    |
+| Web Storage·접근성·날씨 모션 | Pinia 상태 일부를 `localStorage`에 저장하고, 지도·화면 효과에는 `aria-pressed`, `pointer-events: none`, `prefers-reduced-motion`을 적용했습니다.                                     | 새로고침 뒤 설정 유지, 키보드 조작과 감소된 모션 상태를 확인했습니다.                                             |
 
 ## 레퍼런스
 
-- [그늘길](https://project-g-seven.vercel.app/): 시간과 건물 정보를 지도에 겹쳐 이동 경로를 선택하게 하는 문제 설정을 참고했습니다. 화면이나 코드를 가져오지 않고, 구름사이는 도착 시각의 날씨와 활동별 장소를 비교하는 서비스로 다시 설계했습니다.
+- [그늘길](https://project-g-seven.vercel.app/): 시간과 건물 높이로 그림자를 지도에 보여 주는 문제 설정을 참고했습니다. 화면이나 코드를 가져오지 않았고, 구름사이는 도착 시각의 그림자와 OSRM 경로 대안을 직접 비교하는 기능으로 확장했습니다.
 
 ## 실행 방법
 
@@ -112,4 +118,4 @@ npm run build
 - 공개 저장소와 Pages의 최신 커밋 일치 확인
 - 현재 파일, Git 이력과 `dist`에 실제 API 키가 없는지 확인
 
-예보와 이동 시간은 계획을 돕는 참고 정보입니다. 제주 이동과 API 실패 시 경로는 추정값이며, 활동 장소의 운영 시간·예약·혼잡도는 출발 전에 별도로 확인해야 합니다.
+예보와 이동 시간은 계획을 돕는 참고 정보입니다. 제주 이동과 API 실패 시 경로는 추정값입니다. 그늘 우선은 도착지 주변 현재 지도에 로드된 건물과 자동차 경로 대안을 비교한 결과이며 보행 안전이나 전체 이동 구간의 그늘을 보장하지 않습니다. 활동 장소의 운영 시간·예약·혼잡도도 출발 전에 별도로 확인해야 합니다.
