@@ -3,7 +3,7 @@ import { MAP_SEARCH_ANIMATION } from '../../assets/lottieAnimations'
 import DotLottieCanvas from './DotLottieCanvas.vue'
 
 defineProps({ message: { type: String, required: true } })
-const emit = defineEmits(['ready'])
+const emit = defineEmits(['complete', 'ready'])
 </script>
 
 <template>
@@ -12,6 +12,9 @@ const emit = defineEmits(['ready'])
       <DotLottieCanvas
         :animation-data="MAP_SEARCH_ANIMATION"
         label="지도에서 목적지를 찾는 애니메이션"
+        :loop="false"
+        :speed="3.2"
+        @complete="emit('complete')"
         @ready="emit('ready')"
       />
     </div>

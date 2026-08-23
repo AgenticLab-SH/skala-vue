@@ -5,6 +5,7 @@ const props = defineProps({
   animationData: { type: String, required: true },
   autoplay: { type: Boolean, default: true },
   loop: { type: Boolean, default: true },
+  speed: { type: Number, default: 1 },
   label: { type: String, default: '' },
 })
 
@@ -12,12 +13,42 @@ const emit = defineEmits(['complete', 'ready'])
 const canvas = ref(null)
 const status = ref('loading')
 let player
+let completionFrame
+let completionTimer
+let playbackFinished = false
+let playbackStarted = false
 
 function decodeBase64(value) {
   const binary = window.atob(value)
   const bytes = new Uint8Array(binary.length)
   for (let index = 0; index < binary.length; index += 1) bytes[index] = binary.charCodeAt(index)
   return bytes.buffer
+}
+
+function finishPlayback() {
+  if (playbackFinished || props.loop) return
+  playbackFinished = true
+  window.clearTimeout(completionTimer)
+  if (player?.totalFrames) player.setFrame(Math.max(0, player.totalFrames - 1))
+  status.value = 'complete'
+  completionFrame = window.requestAnimationFrame(() => emit('complete'))
+}
+
+function startPlayback() {
+  if (playbackStarted || !player?.isLoaded) return
+  playbackStarted = true
+  status.value = 'ready'
+  player.setSpeed(props.speed)
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  const shouldAutoplay = props.autoplay && !reduceMotion
+  if (shouldAutoplay) player.play()
+  if (shouldAutoplay && !props.loop && player.duration > 0) {
+    completionTimer = window.setTimeout(finishPlayback, (player.duration / props.speed) * 1000)
+  } else if (reduceMotion && !props.loop) {
+    // 모션을 줄인 환경에서는 마지막 장면만 잠시 보여 주고 다음 화면으로 넘어갑니다.
+    completionTimer = window.setTimeout(finishPlayback, 900)
+  }
+  emit('ready')
 }
 
 onMounted(async () => {
@@ -31,17 +62,15 @@ onMounted(async () => {
     player = new DotLottie({
       canvas: canvas.value,
       data: decodeBase64(props.animationData),
-      autoplay: props.autoplay && !reduceMotion,
+      autoplay: false,
       loop: props.loop && !reduceMotion,
       backgroundColor: 'transparent',
       layout: { fit: 'contain', align: [0.5, 0.5] },
       renderConfig: { autoResize: true, freezeOnOffscreen: true, quality: 88 },
     })
-    player.addEventListener('ready', () => {
-      status.value = 'ready'
-      emit('ready')
-    })
-    player.addEventListener('complete', () => emit('complete'))
+    player.addEventListener('ready', startPlayback)
+    player.addEventListener('load', startPlayback)
+    player.addEventListener('complete', finishPlayback)
     player.addEventListener('loadError', () => {
       status.value = 'error'
     })
@@ -53,7 +82,11 @@ onMounted(async () => {
   }
 })
 
-onBeforeUnmount(() => player?.destroy())
+onBeforeUnmount(() => {
+  window.clearTimeout(completionTimer)
+  window.cancelAnimationFrame(completionFrame)
+  player?.destroy()
+})
 </script>
 
 <template>
@@ -81,7 +114,8 @@ canvas {
   transition: opacity 180ms ease-out;
 }
 
-.lottie-canvas.is-ready canvas {
+.lottie-canvas.is-ready canvas,
+.lottie-canvas.is-complete canvas {
   opacity: 1;
 }
 

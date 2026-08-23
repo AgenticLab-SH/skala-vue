@@ -43,8 +43,8 @@ const weatherGrid = ref([])
 const weatherGridStatus = ref('loading')
 const weatherGridError = ref('')
 const routeSearchVisible = ref(false)
-let routeAnimationReadyAt = 0
-let routeAnimationReadyResolve
+let routeSearchStartedAt = 0
+let routeAnimationCompleteResolve
 let routeAnimationFallbackTimer
 
 const origin = computed(() => weatherCities.find((city) => city.id === originId.value))
@@ -58,18 +58,20 @@ function showOriginWeatherEffect() {
   else configStore.clearWeatherEffect()
 }
 
-async function submitPlanner(focusResult = true) {
-  window.clearTimeout(routeAnimationFallbackTimer)
-  routeAnimationReadyAt = 0
-  routeSearchVisible.value = true
-  const animationReady = new Promise((resolve) => {
-    routeAnimationReadyResolve = resolve
-    routeAnimationFallbackTimer = window.setTimeout(() => {
-      routeAnimationReadyAt = performance.now()
-      resolve(routeAnimationReadyAt)
-      routeAnimationReadyResolve = null
-    }, 800)
-  })
+async function submitPlanner(focusResult = true, showRouteSearch = true) {
+  let animationComplete
+  if (showRouteSearch) {
+    window.clearTimeout(routeAnimationFallbackTimer)
+    routeSearchStartedAt = performance.now()
+    routeSearchVisible.value = true
+    animationComplete = new Promise((resolve) => {
+      routeAnimationCompleteResolve = resolve
+      routeAnimationFallbackTimer = window.setTimeout(() => {
+        resolve()
+        routeAnimationCompleteResolve = null
+      }, 2600)
+    })
+  }
 
   configStore.clearWeatherEffect()
   configStore.savePlanner({
@@ -83,12 +85,15 @@ async function submitPlanner(focusResult = true) {
     departureAt: new Date(departureAt.value),
     maxTravelMinutes: maxTravelMinutes.value,
   })
-  await Promise.all([plannerRequest, animationReady])
-
-  const remainingAnimationTime = 1000 - (performance.now() - routeAnimationReadyAt)
-  if (remainingAnimationTime > 0)
-    await new Promise((resolve) => setTimeout(resolve, remainingAnimationTime))
-  routeSearchVisible.value = false
+  if (showRouteSearch) {
+    await Promise.all([plannerRequest, animationComplete])
+    const remainingAnimationTime = 1000 - (performance.now() - routeSearchStartedAt)
+    if (remainingAnimationTime > 0)
+      await new Promise((resolve) => setTimeout(resolve, remainingAnimationTime))
+    routeSearchVisible.value = false
+  } else {
+    await plannerRequest
+  }
   showOriginWeatherEffect()
   if (focusResult) {
     await nextTick()
@@ -96,12 +101,11 @@ async function submitPlanner(focusResult = true) {
   }
 }
 
-function handleRouteAnimationReady() {
-  if (!routeAnimationReadyResolve) return
+function handleRouteAnimationComplete() {
+  if (!routeAnimationCompleteResolve) return
   window.clearTimeout(routeAnimationFallbackTimer)
-  routeAnimationReadyAt = performance.now()
-  routeAnimationReadyResolve(routeAnimationReadyAt)
-  routeAnimationReadyResolve = null
+  routeAnimationCompleteResolve()
+  routeAnimationCompleteResolve = null
 }
 
 async function loadWeatherGrid(force = false) {
@@ -157,7 +161,8 @@ watch([originId, activityId, maxTravelMinutes], ([nextOrigin], [previousOrigin])
 
 onMounted(() => {
   loadWeatherGrid()
-  submitPlanner(false)
+  // 첫 화면에서는 웰컴만 보여 주고, 지도 탐색은 사용자가 요청했을 때 시작합니다.
+  submitPlanner(false, false)
 })
 </script>
 
@@ -168,7 +173,7 @@ onMounted(() => {
         <div v-if="routeSearchVisible" class="route-search-overlay">
           <SearchLoadingState
             message="도시별 도착 시각을 계산하고 예보를 비교합니다."
-            @ready="handleRouteAnimationReady"
+            @complete="handleRouteAnimationComplete"
           />
         </div>
       </Transition>
@@ -186,7 +191,7 @@ onMounted(() => {
       v-model:activity-id="activityId"
       v-model:departure-at="departureAt"
       v-model:max-travel-minutes="maxTravelMinutes"
-      :loading="routeSearchVisible"
+      :loading="planner.status.value === 'loading' || routeSearchVisible"
       :min-date="minDate"
       :max-date="maxDate"
       @submit="submitPlanner"

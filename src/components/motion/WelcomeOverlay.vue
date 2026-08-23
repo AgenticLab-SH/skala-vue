@@ -27,7 +27,8 @@ function handleKeydown(event) {
 
 onMounted(() => {
   document.addEventListener('keydown', handleKeydown)
-  closeTimer = window.setTimeout(closeWelcome, 2000)
+  // 원본의 마지막 장면을 놓치지 않되, 재생 오류가 나면 오래 머물지 않도록 종료 시간을 제한합니다.
+  closeTimer = window.setTimeout(closeWelcome, 2600)
   nextTick(() => welcomeOverlay.value?.focus())
 })
 
@@ -54,6 +55,8 @@ onBeforeUnmount(() => {
             :animation-data="WELCOME_ANIMATION"
             label="환영 인사가 나타나는 애니메이션"
             :loop="false"
+            :speed="5.2"
+            @complete="closeWelcome"
           />
         </div>
         <h2 id="welcome-title">
