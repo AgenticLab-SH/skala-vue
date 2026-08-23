@@ -209,6 +209,16 @@ const weatherUpdatedAt = computed(() => {
   }).format(new Date(time))
 })
 
+const arrivalTimeLabel = computed(() =>
+  new Intl.DateTimeFormat('ko-KR', {
+    month: 'numeric',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  }).format(new Date(props.arrivalAt)),
+)
+
 const emptyWeatherMessage = computed(() =>
   mapMode.value === 'rain'
     ? '현재 확인된 지점에는 비가 없습니다.'
@@ -300,10 +310,7 @@ function applyMapMode() {
     'route-alternatives',
     routeVisible && routeStrategy.value === 'shade' && routeAlternatives.value.length > 1,
   )
-  setLayerVisibility(
-    'building-shadows',
-    routeVisible && routeStrategy.value === 'shade' && isThreeDimensional.value,
-  )
+  setLayerVisibility('building-shadows', routeVisible && isThreeDimensional.value)
   setLayerVisibility('destination-buildings', routeVisible)
   setLayerVisibility(
     'weather-cloud-area',
@@ -607,7 +614,7 @@ function syncWeatherMotionMarkers() {
     const isCloudy = isOverviewRegion ? point.overviewIsCloudy : point.isCloudy
     const visible =
       enabled &&
-      routeStrategy.value !== 'shade' &&
+      !isThreeDimensional.value &&
       (point.detailLevel === 'region' || showLocalDetails) &&
       (mapMode.value === 'route' ||
         mapMode.value === 'weather' ||
@@ -693,9 +700,19 @@ function addBuildingLayer() {
       source: 'building-shadows',
       layout: { visibility: 'none' },
       paint: {
-        'fill-color': '#526a80',
-        'fill-opacity': 0.36,
-        'fill-outline-color': 'rgba(54, 76, 96, 0.28)',
+        'fill-color': '#273a4a',
+        'fill-opacity': [
+          'interpolate',
+          ['linear'],
+          ['get', 'shadowLength'],
+          0,
+          0.3,
+          80,
+          0.42,
+          240,
+          0.5,
+        ],
+        'fill-outline-color': 'rgba(31, 49, 65, 0.38)',
       },
     },
     'destination-buildings',
@@ -737,20 +754,23 @@ function useFastestRoute() {
   syncWeatherMotionMarkers()
 }
 
-function calculateShadeRoute(token, loadAttempt = 0) {
+function calculateBuildingShadows(token, shouldChooseRoute, loadAttempt = 0) {
   if (
     token !== shadeCalculationToken ||
     !map ||
     mapStatus.value !== 'ready' ||
-    routeStrategy.value !== 'shade' ||
-    mapMode.value !== 'route'
+    mapMode.value !== 'route' ||
+    !isThreeDimensional.value
   ) {
     return
   }
 
   if (!map.isSourceLoaded('openfreemap-buildings') && loadAttempt < 2) {
     shadeMessage.value = '도착지 건물 높이 데이터를 기다리고 있습니다.'
-    shadeTimer = window.setTimeout(() => calculateShadeRoute(token, loadAttempt + 1), 1200)
+    shadeTimer = window.setTimeout(
+      () => calculateBuildingShadows(token, shouldChooseRoute, loadAttempt + 1),
+      1200,
+    )
     return
   }
 
@@ -760,9 +780,9 @@ function calculateShadeRoute(token, loadAttempt = 0) {
     props.destination.longitude,
   )
   if (!Number.isFinite(sun.altitude) || sun.altitude <= 0) {
-    activeRouteIndex.value = 0
+    if (shouldChooseRoute) activeRouteIndex.value = 0
     shadeStatus.value = 'unavailable'
-    shadeMessage.value = '도착 시각에는 해가 져 있어 빠른 경로를 유지합니다.'
+    shadeMessage.value = '도착 시각에는 해가 져 있어 빠른 경로만 표시합니다.'
     shadeMetrics.value = null
     clearBuildingShadows()
     updateRouteSources()
@@ -777,9 +797,9 @@ function calculateShadeRoute(token, loadAttempt = 0) {
   map.getSource('building-shadows')?.setData(shadows)
 
   if (!shadows.features.length) {
-    activeRouteIndex.value = 0
+    if (shouldChooseRoute) activeRouteIndex.value = 0
     shadeStatus.value = 'unavailable'
-    shadeMessage.value = '현재 지도에서 높이가 있는 건물을 찾지 못해 빠른 경로를 유지합니다.'
+    shadeMessage.value = '현재 지도에서 높이가 있는 건물을 찾지 못했습니다.'
     shadeMetrics.value = null
     updateRouteSources()
     applyMapMode()
@@ -787,7 +807,7 @@ function calculateShadeRoute(token, loadAttempt = 0) {
   }
 
   const selected = chooseShadedRoute(routeAlternatives.value, shadows, visibleMapBounds())
-  if (!selected) {
+  if (shouldChooseRoute && !selected) {
     activeRouteIndex.value = 0
     shadeStatus.value = 'unavailable'
     shadeMessage.value = '표시 중인 도착지 구간과 경로가 겹치지 않아 빠른 경로를 유지합니다.'
@@ -797,22 +817,42 @@ function calculateShadeRoute(token, loadAttempt = 0) {
     return
   }
 
-  activeRouteIndex.value = selected.index
+  if (shouldChooseRoute) activeRouteIndex.value = selected.index
+  const displayedRouteShade = shouldChooseRoute
+    ? selected
+    : selected?.comparisons.find((comparison) => comparison.index === activeRouteIndex.value)
   shadeStatus.value = 'ready'
   shadeMetrics.value = {
     altitude: Math.round(sun.altitude),
     azimuth: Math.round(sun.azimuth),
     buildingCount: shadows.features.length,
-    shadePercent: Math.round(selected.shadeRatio * 100),
-    extraMinutes: selected.extraMinutes,
-    sampleCount: selected.sampleCount,
+    shadePercent: Math.round((displayedRouteShade?.shadeRatio ?? 0) * 100),
+    extraMinutes: displayedRouteShade?.extraMinutes ?? 0,
+    sampleCount: displayedRouteShade?.sampleCount ?? 0,
   }
-  shadeMessage.value =
-    routeAlternatives.value.length > 1
-      ? `경로 ${routeAlternatives.value.length}개를 비교해 표시 구간의 그늘과 이동 시간 균형이 나은 경로를 선택했습니다.`
-      : '그림자는 계산했지만 경로 대안이 없어 현재 경로를 유지합니다.'
+  if (shouldChooseRoute) {
+    shadeMessage.value =
+      routeAlternatives.value.length > 1
+        ? `경로 ${routeAlternatives.value.length}개를 비교해 그늘과 이동 시간의 균형이 나은 경로를 표시합니다.`
+        : '건물 그림자는 표시했지만 경로 대안이 없어 현재 경로를 유지합니다.'
+  } else {
+    shadeMessage.value = '도착 시각의 건물 그림자를 3D 지도에 표시합니다.'
+  }
   updateRouteSources()
   applyMapMode()
+}
+
+function queueBuildingShadowCalculation(shouldChooseRoute) {
+  const token = ++shadeCalculationToken
+  let calculated = false
+  const runCalculation = () => {
+    if (calculated) return
+    calculated = true
+    window.clearTimeout(shadeTimer)
+    calculateBuildingShadows(token, shouldChooseRoute)
+  }
+  map.once('idle', runCalculation)
+  shadeTimer = window.setTimeout(runCalculation, 1700)
 }
 
 function useShadedRoute() {
@@ -827,17 +867,6 @@ function useShadedRoute() {
   updateRouteSources()
   applyMapMode()
   syncWeatherMotionMarkers()
-
-  const token = ++shadeCalculationToken
-  let calculated = false
-  const runCalculation = () => {
-    if (calculated) return
-    calculated = true
-    window.clearTimeout(shadeTimer)
-    calculateShadeRoute(token)
-  }
-  map.once('idle', runCalculation)
-  shadeTimer = window.setTimeout(runCalculation, 1600)
   map.easeTo({
     center: [props.destination.longitude, props.destination.latitude],
     zoom: 16.4,
@@ -845,6 +874,7 @@ function useShadedRoute() {
     bearing: -18,
     duration: prefersReducedMotion() ? 0 : 650,
   })
+  queueBuildingShadowCalculation(true)
 }
 
 function showWholeRoute() {
@@ -910,7 +940,11 @@ function showDestinationIn3d() {
   if (!map || mapStatus.value !== 'ready') return
   mapMode.value = 'route'
   isThreeDimensional.value = true
+  shadeStatus.value = 'loading'
+  shadeMetrics.value = null
+  shadeMessage.value = '도착 시각의 건물 그림자를 계산하고 있습니다.'
   applyMapMode()
+  syncWeatherMotionMarkers()
   map.easeTo({
     center: [props.destination.longitude, props.destination.latitude],
     zoom: 16.2,
@@ -918,6 +952,7 @@ function showDestinationIn3d() {
     bearing: -18,
     duration: prefersReducedMotion() ? 0 : 650,
   })
+  queueBuildingShadowCalculation(false)
 }
 
 function toggleView() {
@@ -1099,7 +1134,7 @@ onBeforeUnmount(() => {
         <span>{{ mapSummary }}</span>
       </div>
       <button
-        v-if="mapStatus === 'ready' && mapMode === 'route'"
+        v-if="mapStatus === 'ready' && mapMode === 'route' && routeStrategy === 'fastest'"
         class="map-view-toggle"
         type="button"
         :aria-pressed="isThreeDimensional"
@@ -1109,48 +1144,78 @@ onBeforeUnmount(() => {
       </button>
     </header>
 
-    <div class="map-mode-controls" role="group" aria-label="지도 보기">
-      <button type="button" :aria-pressed="mapMode === 'route'" @click="showWholeRoute">
+    <div class="map-mode-controls" role="group" aria-label="지도 종류">
+      <button
+        type="button"
+        :aria-pressed="mapMode === 'route'"
+        :disabled="mapStatus !== 'ready'"
+        @click="useFastestRoute"
+      >
         이동 경로
       </button>
       <button
         type="button"
-        :aria-pressed="mapMode === 'weather'"
-        :disabled="weatherGridStatus !== 'success'"
+        :aria-pressed="mapMode !== 'route'"
+        :disabled="weatherGridStatus !== 'success' || mapStatus !== 'ready'"
         @click="showWeatherMode('weather')"
       >
-        전체 지역 <span>{{ regionCount }}</span>
-      </button>
-      <button
-        type="button"
-        :aria-pressed="mapMode === 'rain'"
-        :disabled="weatherGridStatus !== 'success'"
-        @click="showWeatherMode('rain')"
-      >
-        비 지역 <span>{{ rainRegionCount }}</span>
-      </button>
-      <button
-        type="button"
-        :aria-pressed="mapMode === 'cloud'"
-        :disabled="weatherGridStatus !== 'success'"
-        @click="showWeatherMode('cloud')"
-      >
-        흐림 지역 <span>{{ cloudyRegionCount }}</span>
+        전국 날씨 <span>{{ regionCount }}</span>
       </button>
     </div>
 
-    <section v-if="mapMode === 'route'" class="route-strategy-panel" aria-label="경로 계산 방식">
+    <div
+      v-if="mapMode !== 'route'"
+      class="weather-filter-controls"
+      role="group"
+      aria-label="날씨 조건"
+    >
+      <button
+        type="button"
+        :aria-pressed="mapMode === 'weather'"
+        @click="showWeatherMode('weather')"
+      >
+        전체
+      </button>
+      <button type="button" :aria-pressed="mapMode === 'rain'" @click="showWeatherMode('rain')">
+        비 <span>{{ rainRegionCount }}</span>
+      </button>
+      <button type="button" :aria-pressed="mapMode === 'cloud'" @click="showWeatherMode('cloud')">
+        흐림 <span>{{ cloudyRegionCount }}</span>
+      </button>
+    </div>
+
+    <section
+      v-if="mapMode === 'route'"
+      class="route-strategy-panel"
+      :class="{ 'has-result': routeStrategy === 'shade' }"
+      aria-label="경로 계산 방식"
+    >
       <div class="route-strategy-controls" role="group" aria-label="경로 선택">
-        <button type="button" :aria-pressed="routeStrategy === 'fastest'" @click="useFastestRoute">
+        <button
+          type="button"
+          :aria-pressed="routeStrategy === 'fastest'"
+          :disabled="mapStatus !== 'ready'"
+          @click="useFastestRoute"
+        >
           <strong>빠른 경로</strong>
-          <span>이동 시간이 짧은 경로</span>
+          <span>최단 시간</span>
         </button>
-        <button type="button" :aria-pressed="routeStrategy === 'shade'" @click="useShadedRoute">
-          <strong>그늘 우선</strong>
-          <span>도착지 주변 건물 그림자 비교</span>
+        <button
+          type="button"
+          :aria-pressed="routeStrategy === 'shade'"
+          :disabled="mapStatus !== 'ready'"
+          @click="useShadedRoute"
+        >
+          <strong>그늘 경로</strong>
+          <span>건물 그림자 비교</span>
         </button>
       </div>
-      <div class="shade-result" :class="`is-${shadeStatus}`" aria-live="polite">
+      <div
+        v-if="routeStrategy === 'shade'"
+        class="shade-result"
+        :class="`is-${shadeStatus}`"
+        aria-live="polite"
+      >
         <p>{{ shadeMessage }}</p>
         <dl v-if="shadeMetrics">
           <div>
@@ -1183,8 +1248,19 @@ onBeforeUnmount(() => {
 
     <div class="map-frame">
       <div ref="mapContainer" class="map-canvas" role="region" :aria-label="mapAriaLabel"></div>
+      <div
+        v-if="mapMode === 'route' && isThreeDimensional"
+        class="map-shadow-legend"
+        :class="`is-${shadeStatus}`"
+        role="status"
+      >
+        <span><i aria-hidden="true"></i>건물 그림자</span>
+        <small v-if="shadeStatus === 'ready'">{{ arrivalTimeLabel }} 도착 기준</small>
+        <small v-else-if="shadeStatus === 'loading'">계산 중</small>
+        <small v-else>{{ shadeMessage }}</small>
+      </div>
       <button
-        v-if="mapStatus === 'ready' && !(mapMode === 'route' && routeStrategy === 'shade')"
+        v-if="mapStatus === 'ready' && !(mapMode === 'route' && isThreeDimensional)"
         class="map-motion-toggle"
         type="button"
         :aria-pressed="configStore.mapWeatherMotionEnabled"
@@ -1224,6 +1300,9 @@ onBeforeUnmount(() => {
           <span v-if="routeStrategy === 'shade'">
             도착지 주변 지도에 로드된 건물과 경로 대안을 비교한 결과이며 보행 안전을 보장하지
             않습니다.
+          </span>
+          <span v-else-if="isThreeDimensional">
+            도착 시각의 태양각과 지도 건물 높이로 계산한 그림자를 3D 건물과 함께 표시합니다.
           </span>
           <span v-else>
             3D 건물과 이동선을 함께 확인합니다. 날씨 모션은 현재 기상 지점을 기준으로 표시합니다.
@@ -1395,7 +1474,8 @@ onBeforeUnmount(() => {
 }
 
 .map-view-toggle,
-.map-mode-controls button {
+.map-mode-controls button,
+.weather-filter-controls button {
   min-height: 44px;
   border: 1px solid rgba(255, 255, 255, 0.75);
   background: var(--glass);
@@ -1454,18 +1534,54 @@ onBeforeUnmount(() => {
   font-variant-numeric: tabular-nums;
 }
 
+.weather-filter-controls {
+  display: flex;
+  gap: 6px;
+  margin: -4px 0 12px;
+}
+
+.weather-filter-controls button {
+  min-width: 76px;
+  padding: 0 14px;
+  border-color: var(--line);
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.weather-filter-controls button[aria-pressed='true'] {
+  border-color: var(--ink);
+  color: var(--ink);
+  box-shadow: inset 0 0 0 1px var(--ink);
+}
+
+.weather-filter-controls span {
+  margin-left: 4px;
+  font-variant-numeric: tabular-nums;
+}
+
 .route-strategy-panel {
+  margin-bottom: 12px;
+}
+
+.route-strategy-panel.has-result {
   display: grid;
   grid-template-columns: minmax(300px, 0.7fr) minmax(0, 1fr);
   align-items: stretch;
   gap: 10px;
-  margin-bottom: 12px;
 }
 
 .route-strategy-controls {
   display: grid;
+  max-width: 480px;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 6px;
+}
+
+.route-strategy-panel.has-result .route-strategy-controls {
+  max-width: none;
 }
 
 .route-strategy-controls button {
@@ -1494,6 +1610,11 @@ onBeforeUnmount(() => {
 
 .route-strategy-controls button[aria-pressed='true'] span {
   color: rgba(255, 255, 255, 0.72);
+}
+
+.route-strategy-controls button:disabled {
+  cursor: wait;
+  opacity: 0.56;
 }
 
 .shade-result {
@@ -1582,6 +1703,53 @@ onBeforeUnmount(() => {
 .map-canvas {
   position: absolute;
   inset: 0;
+}
+
+.map-shadow-legend {
+  position: absolute;
+  z-index: 4;
+  top: 12px;
+  left: 12px;
+  display: grid;
+  min-height: 44px;
+  align-content: center;
+  gap: 2px;
+  padding: 8px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.84);
+  border-radius: 13px;
+  background: rgba(247, 250, 253, 0.88);
+  box-shadow: 0 10px 28px rgba(20, 34, 49, 0.15);
+  color: #273441;
+  pointer-events: none;
+  backdrop-filter: blur(18px) saturate(150%);
+  -webkit-backdrop-filter: blur(18px) saturate(150%);
+}
+
+.map-shadow-legend span {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.map-shadow-legend i {
+  width: 18px;
+  height: 9px;
+  border: 1px solid rgba(31, 49, 65, 0.38);
+  border-radius: 2px;
+  background: rgba(39, 58, 74, 0.5);
+}
+
+.map-shadow-legend small {
+  max-width: 240px;
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 1.35;
+}
+
+.map-shadow-legend.is-loading i {
+  opacity: 0.45;
 }
 
 .map-motion-toggle {
