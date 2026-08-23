@@ -42,6 +42,7 @@ watch(
         <RouterLink to="/">이동 추천</RouterLink>
         <RouterLink to="/weather/search">도시별 날씨</RouterLink>
         <RouterLink to="/process">구현 기록</RouterLink>
+        <RouterLink to="/prompts">사용한 프롬프트</RouterLink>
         <RouterLink to="/challenges">수업 실습 기록</RouterLink>
         <RouterLink to="/reference">활용자료</RouterLink>
       </nav>

@@ -38,12 +38,23 @@ const mapViewport = ref({
 })
 const mapBearing = ref(0)
 const mapPitch = ref(0)
+const isCoarsePointer = ref(false)
+const touchInteractionActive = ref(false)
 let map
 let loadTimer
 let shadeTimer
+let routeRevealTimer
 let shadeCalculationToken = 0
+let routeRevealPending = false
 let weatherPopup
 let weatherMotionMarkers = []
+
+const KOREA_OVERVIEW = {
+  center: [127.78, 36.28],
+  zoom: 5.45,
+  pitch: 0,
+  bearing: 0,
+}
 
 const destinationPoint = computed(() => props.routeDestination ?? props.destination)
 
@@ -659,6 +670,24 @@ function updateMapViewport() {
   syncWeatherMotionMarkers()
 }
 
+function setTouchInteraction(active) {
+  if (!map || !isCoarsePointer.value) return
+  touchInteractionActive.value = active
+  if (active) {
+    map.dragPan.enable()
+    map.touchZoomRotate.enable()
+    map.touchPitch?.enable()
+  } else {
+    map.dragPan.disable()
+    map.touchZoomRotate.disable()
+    map.touchPitch?.disable()
+  }
+}
+
+function toggleTouchInteraction() {
+  setTouchInteraction(!touchInteractionActive.value)
+}
+
 function changeMapBearing(event) {
   if (!map) return
   map.setBearing(Number(event.target.value))
@@ -791,7 +820,13 @@ function clearBuildingShadows() {
   map?.getSource('building-shadows')?.setData({ type: 'FeatureCollection', features: [] })
 }
 
+function cancelRouteReveal() {
+  window.clearTimeout(routeRevealTimer)
+  routeRevealPending = false
+}
+
 function useFastestRoute() {
+  cancelRouteReveal()
   shadeCalculationToken += 1
   window.clearTimeout(shadeTimer)
   routeStrategy.value = 'fastest'
@@ -909,6 +944,7 @@ function queueBuildingShadowCalculation(shouldChooseRoute) {
 
 function useShadedRoute() {
   if (!map || mapStatus.value !== 'ready') return
+  cancelRouteReveal()
   routeStrategy.value = 'shade'
   activeRouteIndex.value = 0
   shadeStatus.value = 'loading'
@@ -949,6 +985,20 @@ function showWholeRoute() {
   emit('mode-change', 'route')
 }
 
+function showCountryOverview() {
+  if (!map || mapStatus.value !== 'ready') return
+  cancelRouteReveal()
+  mapMode.value = 'route'
+  isThreeDimensional.value = false
+  weatherPopup?.remove()
+  applyMapMode()
+  map.easeTo({
+    ...KOREA_OVERVIEW,
+    duration: prefersReducedMotion() ? 0 : 520,
+  })
+  emit('mode-change', 'route')
+}
+
 function fitWeatherRegions(regions) {
   if (!map || !props.weatherGrid.length) return
   const targets = regions.length ? regions : props.weatherGrid
@@ -971,6 +1021,7 @@ function fitWeatherRegions(regions) {
 
 function showWeatherMode(mode) {
   if (!map || mapStatus.value !== 'ready' || props.weatherGridStatus !== 'success') return
+  cancelRouteReveal()
   shadeCalculationToken += 1
   window.clearTimeout(shadeTimer)
   routeStrategy.value = 'fastest'
@@ -988,7 +1039,7 @@ function showWeatherMode(mode) {
   emit('mode-change', mode)
 }
 
-function showDestinationIn3d() {
+function moveToDestinationIn3d({ duration = 650, fly = false } = {}) {
   if (!map || mapStatus.value !== 'ready') return
   mapMode.value = 'route'
   isThreeDimensional.value = true
@@ -997,19 +1048,44 @@ function showDestinationIn3d() {
   shadeMessage.value = '도착 시각의 건물 그림자를 계산하고 있습니다.'
   applyMapMode()
   syncWeatherMotionMarkers()
-  map.easeTo({
+  const camera = {
     center: [destinationPoint.value.longitude, destinationPoint.value.latitude],
-    zoom: 16.2,
+    zoom: 16.35,
     pitch: 52,
     bearing: -18,
     duration: prefersReducedMotion() ? 0 : 650,
-  })
+  }
+  if (!prefersReducedMotion()) camera.duration = duration
+  if (fly) map.flyTo({ ...camera, curve: 1.35, speed: 1.6 })
+  else map.easeTo(camera)
   queueBuildingShadowCalculation(false)
 }
 
-function toggleView() {
-  if (isThreeDimensional.value) showWholeRoute()
-  else showDestinationIn3d()
+function showDestinationIn3d() {
+  cancelRouteReveal()
+  moveToDestinationIn3d()
+}
+
+function playRouteReveal() {
+  routeRevealPending = true
+  if (!map || mapStatus.value !== 'ready') return
+  cancelRouteReveal()
+  mapMode.value = 'route'
+  isThreeDimensional.value = false
+  weatherPopup?.remove()
+  applyMapMode()
+
+  if (prefersReducedMotion()) {
+    moveToDestinationIn3d({ duration: 0 })
+    return
+  }
+
+  map.stop()
+  map.jumpTo(KOREA_OVERVIEW)
+  updateMapViewport()
+  routeRevealTimer = window.setTimeout(() => {
+    moveToDestinationIn3d({ duration: 1100, fly: true })
+  }, 320)
 }
 
 function createWeatherPopupContent(point) {
@@ -1082,6 +1158,7 @@ function temperatureRange(group) {
 
 function updateMapData() {
   if (!map || mapStatus.value !== 'ready') return
+  cancelRouteReveal()
   shadeCalculationToken += 1
   window.clearTimeout(shadeTimer)
   routeStrategy.value = 'fastest'
@@ -1107,13 +1184,14 @@ function updateWeatherData() {
 onMounted(async () => {
   await nextTick()
   if (!mapContainer.value) return
+  isCoarsePointer.value = window.matchMedia('(pointer: coarse)').matches
   try {
     map = new maplibregl.Map({
       container: mapContainer.value,
       style: 'https://tiles.openfreemap.org/styles/positron',
       center: [destinationPoint.value.longitude, destinationPoint.value.latitude],
       zoom: 7,
-      cooperativeGestures: true,
+      cooperativeGestures: !isCoarsePointer.value,
       attributionControl: true,
       canvasContextAttributes: { antialias: true },
     })
@@ -1121,6 +1199,7 @@ onMounted(async () => {
       new maplibregl.NavigationControl({ showCompass: false, visualizePitch: true }),
       'bottom-right',
     )
+    if (isCoarsePointer.value) setTouchInteraction(false)
     loadTimer = window.setTimeout(() => {
       if (mapStatus.value === 'loading') {
         mapStatus.value = 'error'
@@ -1135,7 +1214,8 @@ onMounted(async () => {
         window.clearTimeout(loadTimer)
         mapStatus.value = 'ready'
         rebuildWeatherMotionMarkers()
-        showWholeRoute()
+        if (routeRevealPending) playRouteReveal()
+        else showWholeRoute()
         updateMapViewport()
       } catch {
         window.clearTimeout(loadTimer)
@@ -1156,6 +1236,8 @@ onMounted(async () => {
     })
     map.on('zoomend', updateMapViewport)
     map.on('moveend', updateMapViewport)
+    map.on('dragstart', cancelRouteReveal)
+    map.on('touchstart', cancelRouteReveal)
   } catch {
     mapStatus.value = 'error'
     mapError.value = '이 브라우저에서는 3D 지도를 표시할 수 없습니다.'
@@ -1177,10 +1259,13 @@ watch(routeStrategy, syncWeatherMotionMarkers)
 onBeforeUnmount(() => {
   window.clearTimeout(loadTimer)
   window.clearTimeout(shadeTimer)
+  window.clearTimeout(routeRevealTimer)
   weatherPopup?.remove()
   clearWeatherMotionMarkers()
   map?.remove()
 })
+
+defineExpose({ playRouteReveal, showCountryOverview, showDestinationIn3d })
 </script>
 
 <template>
@@ -1191,15 +1276,19 @@ onBeforeUnmount(() => {
         <h3 id="route-map-title">{{ mapTitle }}</h3>
         <span>{{ mapSummary }}</span>
       </div>
-      <button
-        v-if="mapStatus === 'ready' && mapMode === 'route' && routeStrategy === 'fastest'"
+      <div
+        v-if="mapStatus === 'ready' && mapMode === 'route'"
         class="map-view-toggle"
-        type="button"
-        :aria-pressed="isThreeDimensional"
-        @click="toggleView"
+        role="group"
+        aria-label="지도 확대 단계"
       >
-        {{ isThreeDimensional ? '전체 경로 보기' : '3D 그림자 보기' }}
-      </button>
+        <button type="button" :aria-pressed="!isThreeDimensional" @click="showCountryOverview">
+          전체보기
+        </button>
+        <button type="button" :aria-pressed="isThreeDimensional" @click="showDestinationIn3d">
+          확대보기
+        </button>
+      </div>
     </header>
 
     <div class="map-mode-controls" role="group" aria-label="지도 종류">
@@ -1300,8 +1389,32 @@ onBeforeUnmount(() => {
       <button type="button" @click="emit('retry-weather-grid')">다시 불러오기</button>
     </div>
 
-    <div class="map-frame">
+    <div
+      class="map-frame"
+      :class="{
+        'is-coarse-pointer': isCoarsePointer,
+        'is-touch-active': touchInteractionActive,
+      }"
+    >
       <div ref="mapContainer" class="map-canvas" role="region" :aria-label="mapAriaLabel"></div>
+      <div v-if="mapStatus === 'ready'" class="map-interaction-control">
+        <button
+          v-if="isCoarsePointer"
+          type="button"
+          :aria-pressed="touchInteractionActive"
+          @click="toggleTouchInteraction"
+        >
+          {{ touchInteractionActive ? '페이지 스크롤' : '지도 조작' }}
+        </button>
+        <span v-else>드래그 이동 · Ctrl+휠 확대 · 나침반 회전</span>
+        <small v-if="isCoarsePointer">
+          {{
+            touchInteractionActive
+              ? '한 손 이동과 핀치 확대가 켜졌습니다.'
+              : '눌러서 터치 이동을 켭니다.'
+          }}
+        </small>
+      </div>
       <details v-if="mapStatus === 'ready'" class="map-angle-control">
         <summary>
           <i
@@ -1384,7 +1497,8 @@ onBeforeUnmount(() => {
       </div>
       <div
         v-if="
-          weatherGridStatus === 'success' && !(mapMode === 'route' && routeStrategy === 'shade')
+          weatherGridStatus === 'success' &&
+          !(mapMode === 'route' && (routeStrategy === 'shade' || isThreeDimensional))
         "
         class="weather-legend"
         aria-label="기상 지도 범례"
@@ -1573,7 +1687,7 @@ onBeforeUnmount(() => {
   font-size: 14px;
 }
 
-.map-view-toggle,
+.map-view-toggle button,
 .map-mode-controls button,
 .weather-filter-controls button {
   min-height: 44px;
@@ -1585,13 +1699,34 @@ onBeforeUnmount(() => {
 }
 
 .map-view-toggle {
+  display: flex;
   flex: 0 0 auto;
-  padding: 0 18px;
+  gap: 3px;
+  padding: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.78);
   border-radius: 999px;
+  background: var(--glass);
   box-shadow:
     0 8px 24px rgba(22, 34, 46, 0.12),
     inset 0 1px rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(18px) saturate(150%);
+  -webkit-backdrop-filter: blur(18px) saturate(150%);
+}
+
+.map-view-toggle button {
+  min-width: 82px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 13px;
   font-weight: 750;
+}
+
+.map-view-toggle button[aria-pressed='true'] {
+  background: var(--ink);
+  color: #fff;
 }
 
 .map-mode-controls {
@@ -1805,6 +1940,58 @@ onBeforeUnmount(() => {
   inset: 0;
 }
 
+.map-frame :deep(.maplibregl-canvas) {
+  cursor: grab;
+}
+
+.map-frame :deep(.maplibregl-canvas:active) {
+  cursor: grabbing;
+}
+
+.map-frame.is-coarse-pointer:not(.is-touch-active) :deep(.maplibregl-canvas) {
+  touch-action: pan-y !important;
+}
+
+.map-interaction-control {
+  position: absolute;
+  z-index: 5;
+  top: 12px;
+  left: 12px;
+  display: grid;
+  min-height: 44px;
+  align-content: center;
+  gap: 2px;
+  padding: 7px 11px;
+  border: 1px solid rgba(255, 255, 255, 0.84);
+  border-radius: 13px;
+  background: rgba(247, 250, 253, 0.88);
+  box-shadow: 0 10px 28px rgba(20, 34, 49, 0.14);
+  color: #273441;
+  backdrop-filter: blur(18px) saturate(150%);
+  -webkit-backdrop-filter: blur(18px) saturate(150%);
+}
+
+.map-interaction-control button {
+  min-height: 30px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  font-size: 12px;
+  font-weight: 800;
+  text-align: left;
+}
+
+.map-interaction-control > span {
+  font-size: 11px;
+  font-weight: 750;
+}
+
+.map-interaction-control small {
+  color: var(--muted);
+  font-size: 9px;
+}
+
 .map-angle-control {
   position: absolute;
   z-index: 5;
@@ -1917,7 +2104,7 @@ onBeforeUnmount(() => {
 .map-shadow-legend {
   position: absolute;
   z-index: 4;
-  top: 12px;
+  top: 64px;
   left: 12px;
   display: grid;
   min-height: 44px;
@@ -2047,7 +2234,7 @@ onBeforeUnmount(() => {
 .weather-legend {
   position: absolute;
   z-index: 2;
-  top: 12px;
+  top: 64px;
   left: 12px;
   display: flex;
   gap: 12px;
@@ -2618,6 +2805,7 @@ onBeforeUnmount(() => {
 
 @supports not (backdrop-filter: blur(1px)) {
   .map-view-toggle,
+  .map-interaction-control,
   .map-mode-controls button,
   .map-motion-toggle,
   .map-angle-control,
@@ -2630,6 +2818,10 @@ onBeforeUnmount(() => {
 }
 
 @media (hover: hover) and (pointer: fine) {
+  .map-view-toggle button:hover {
+    color: var(--ink);
+  }
+
   .route-strategy-controls button:hover {
     border-color: var(--line-strong);
   }
@@ -2647,6 +2839,10 @@ onBeforeUnmount(() => {
 
   .map-view-toggle {
     align-self: stretch;
+  }
+
+  .map-view-toggle button {
+    flex: 1;
   }
 
   .map-frame {
@@ -2675,7 +2871,7 @@ onBeforeUnmount(() => {
   }
 
   .map-angle-control {
-    top: 108px;
+    top: 112px;
     right: 10px;
   }
 
@@ -2746,7 +2942,7 @@ onBeforeUnmount(() => {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .map-view-toggle,
+  .map-view-toggle button,
   .map-mode-controls button,
   .route-strategy-controls button,
   .map-motion-toggle,

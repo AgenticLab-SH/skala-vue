@@ -125,12 +125,6 @@ onBeforeUnmount(() => window.clearTimeout(guidanceTimer))
 
 <template>
   <form class="planner-form" @submit.prevent="submitPlanner">
-    <div class="form-heading">
-      <div>
-        <h2>출발 조건</h2>
-      </div>
-    </div>
-
     <section class="quick-start" aria-labelledby="quick-start-title">
       <div>
         <h3 id="quick-start-title">사용 예시 템플릿으로 테스트해 보세요!</h3>
@@ -236,13 +230,6 @@ onBeforeUnmount(() => window.clearTimeout(guidanceTimer))
   box-shadow: var(--shadow-panel);
 }
 
-.form-heading {
-  display: flex;
-  gap: 16px;
-  align-items: flex-start;
-  margin-bottom: 28px;
-}
-
 .quick-start {
   padding: 16px;
   margin-bottom: 20px;
@@ -333,22 +320,6 @@ onBeforeUnmount(() => window.clearTimeout(guidanceTimer))
   --template-border: rgba(112, 94, 169, 0.34);
   --template-background: rgba(237, 233, 252, 0.9);
   --template-hover: rgba(246, 243, 255, 0.98);
-}
-
-.form-heading h2,
-.form-heading p {
-  margin: 0;
-}
-
-.form-heading h2 {
-  font-size: 22px;
-  letter-spacing: -0.04em;
-}
-
-.form-heading p {
-  margin-top: 6px;
-  color: var(--muted);
-  font-size: 14px;
 }
 
 .form-grid {
