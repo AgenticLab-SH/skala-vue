@@ -25,6 +25,8 @@ function wait(milliseconds) {
   return new Promise((resolve) => setTimeout(resolve, milliseconds))
 }
 
+const MINIMUM_LOADING_TIME = 1000
+
 function buildRecommendation(
   city,
   routeDestination,
@@ -65,6 +67,16 @@ export function useTripPlanner() {
   const failedCityCount = ref(0)
   const selectedCityId = ref('')
   let latestInput = null
+
+  async function finishLoading(runId, loadingStartedAt, nextStatus, message = '') {
+    const remainingLoadingTime = MINIMUM_LOADING_TIME - (Date.now() - loadingStartedAt)
+    if (remainingLoadingTime > 0) await wait(remainingLoadingTime)
+    if (runId !== activeRunId) return false
+
+    errorMessage.value = message
+    status.value = nextStatus
+    return true
+  }
 
   const bestRecommendation = computed(() => recommendations.value[0] ?? null)
   const selectedRecommendation = computed(
@@ -114,10 +126,7 @@ export function useTripPlanner() {
 
     status.value = 'loading'
     errorMessage.value = ''
-    recommendations.value = []
-    timeAlternatives.value = []
     failedCityCount.value = 0
-    selectedCityId.value = ''
     latestInput = { activityId, departureAt, maxTravelMinutes }
 
     const candidates = weatherCities
@@ -134,8 +143,12 @@ export function useTripPlanner() {
       .filter(({ route }) => route.minutes <= maxTravelMinutes * 1.15)
 
     if (!candidates.length) {
-      status.value = 'empty'
-      errorMessage.value = '이 활동을 할 장소가 이동 시간 안에 없습니다.'
+      await finishLoading(
+        runId,
+        loadingStartedAt,
+        'empty',
+        '이 활동을 할 장소가 이동 시간 안에 없습니다.',
+      )
       return
     }
 
@@ -152,9 +165,12 @@ export function useTripPlanner() {
     failedCityCount.value = candidates.length - available.length
 
     if (!available.length) {
-      status.value = 'error'
-      errorMessage.value =
-        '날씨 서버에서 응답을 받지 못했습니다. 연결을 확인한 뒤 다시 시도해 주세요.'
+      await finishLoading(
+        runId,
+        loadingStartedAt,
+        'error',
+        '날씨 서버에서 응답을 받지 못했습니다. 연결을 확인한 뒤 다시 시도해 주세요.',
+      )
       return
     }
 
@@ -180,20 +196,19 @@ export function useTripPlanner() {
 
     const best = recommendations.value[0]
     if (!best) {
-      status.value = 'empty'
-      errorMessage.value =
-        '예상 시간으로는 가까워 보였지만 실제 경로를 확인하니 범위 안에 남는 도시가 없었습니다.'
+      await finishLoading(
+        runId,
+        loadingStartedAt,
+        'empty',
+        '예상 시간으로는 가까워 보였지만 실제 경로를 확인하니 범위 안에 남는 도시가 없었습니다.',
+      )
       return
     }
 
     selectRecommendation(best.city.id)
 
-    // 요청이 빠른 경우에도 진행 상태를 알아볼 수 있도록 짧게 유지합니다.
-    const remainingLoadingTime = 1100 - (Date.now() - loadingStartedAt)
-    if (remainingLoadingTime > 0) await wait(remainingLoadingTime)
-    if (runId !== activeRunId) return
-
-    status.value = 'success'
+    // 결과가 먼저 준비되어도 사용자가 요청 접수를 알아볼 수 있도록 최소 1초간 표시합니다.
+    await finishLoading(runId, loadingStartedAt, 'success')
   }
 
   return {

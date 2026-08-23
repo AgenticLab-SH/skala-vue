@@ -39,10 +39,13 @@ const maximumDate = new Date()
 maximumDate.setDate(maximumDate.getDate() + 4)
 const maxDate = toLocalInputValue(maximumDate)
 const resultFeedback = ref(null)
-const loadingFeedback = ref(null)
 const weatherGrid = ref([])
 const weatherGridStatus = ref('loading')
 const weatherGridError = ref('')
+const routeSearchVisible = ref(false)
+let routeAnimationReadyAt = 0
+let routeAnimationReadyResolve
+let routeAnimationFallbackTimer
 
 const origin = computed(() => weatherCities.find((city) => city.id === originId.value))
 const activity = computed(() => findActivity(activityId.value))
@@ -56,6 +59,18 @@ function showOriginWeatherEffect() {
 }
 
 async function submitPlanner(focusResult = true) {
+  window.clearTimeout(routeAnimationFallbackTimer)
+  routeAnimationReadyAt = 0
+  routeSearchVisible.value = true
+  const animationReady = new Promise((resolve) => {
+    routeAnimationReadyResolve = resolve
+    routeAnimationFallbackTimer = window.setTimeout(() => {
+      routeAnimationReadyAt = performance.now()
+      resolve(routeAnimationReadyAt)
+      routeAnimationReadyResolve = null
+    }, 800)
+  })
+
   configStore.clearWeatherEffect()
   configStore.savePlanner({
     originId: originId.value,
@@ -68,19 +83,25 @@ async function submitPlanner(focusResult = true) {
     departureAt: new Date(departureAt.value),
     maxTravelMinutes: maxTravelMinutes.value,
   })
-  if (focusResult) {
-    await nextTick()
-    loadingFeedback.value?.scrollIntoView({
-      block: 'center',
-      behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',
-    })
-  }
-  await plannerRequest
+  await Promise.all([plannerRequest, animationReady])
+
+  const remainingAnimationTime = 1000 - (performance.now() - routeAnimationReadyAt)
+  if (remainingAnimationTime > 0)
+    await new Promise((resolve) => setTimeout(resolve, remainingAnimationTime))
+  routeSearchVisible.value = false
   showOriginWeatherEffect()
   if (focusResult) {
     await nextTick()
     resultFeedback.value?.focus()
   }
+}
+
+function handleRouteAnimationReady() {
+  if (!routeAnimationReadyResolve) return
+  window.clearTimeout(routeAnimationFallbackTimer)
+  routeAnimationReadyAt = performance.now()
+  routeAnimationReadyResolve(routeAnimationReadyAt)
+  routeAnimationReadyResolve = null
 }
 
 async function loadWeatherGrid(force = false) {
@@ -142,6 +163,17 @@ onMounted(() => {
 
 <template>
   <div class="home-view">
+    <Teleport to="body">
+      <Transition name="route-search-fade">
+        <div v-if="routeSearchVisible" class="route-search-overlay">
+          <SearchLoadingState
+            message="도시별 도착 시각을 계산하고 예보를 비교합니다."
+            @ready="handleRouteAnimationReady"
+          />
+        </div>
+      </Transition>
+    </Teleport>
+
     <section class="hero-copy">
       <h1>원하는 활동을<br />선택하세요.</h1>
       <div class="hero-description">
@@ -154,7 +186,7 @@ onMounted(() => {
       v-model:activity-id="activityId"
       v-model:departure-at="departureAt"
       v-model:max-travel-minutes="maxTravelMinutes"
-      :loading="planner.status.value === 'loading'"
+      :loading="routeSearchVisible"
       :min-date="minDate"
       :max-date="maxDate"
       @submit="submitPlanner"
@@ -165,12 +197,14 @@ onMounted(() => {
       aria-live="polite"
       :aria-busy="planner.status.value === 'loading'"
     >
-      <div v-if="planner.status.value === 'loading'" ref="loadingFeedback" class="loading-panel">
-        <SearchLoadingState message="도시별 도착 시각을 계산하고 예보를 비교합니다." />
-      </div>
+      <div
+        v-if="planner.status.value === 'loading' && !planner.selectedRecommendation.value"
+        class="initial-loading-space"
+        aria-hidden="true"
+      ></div>
 
       <div
-        v-else-if="planner.status.value === 'error'"
+        v-if="planner.status.value === 'error'"
         ref="resultFeedback"
         class="error-panel"
         tabindex="-1"
@@ -274,6 +308,45 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   gap: 56px;
+}
+
+.route-search-overlay {
+  position: fixed;
+  z-index: 35;
+  inset: 0;
+  display: grid;
+  padding: 20px;
+  place-items: center;
+  background: rgba(208, 222, 234, 0.34);
+  backdrop-filter: blur(14px) saturate(120%);
+  -webkit-backdrop-filter: blur(14px) saturate(120%);
+}
+
+.initial-loading-space {
+  min-height: 180px;
+}
+
+.route-search-fade-enter-active,
+.route-search-fade-leave-active {
+  transition: opacity 180ms ease-out;
+}
+
+.route-search-fade-enter-from,
+.route-search-fade-leave-to {
+  opacity: 0;
+}
+
+@supports not (backdrop-filter: blur(1px)) {
+  .route-search-overlay {
+    background: rgba(226, 235, 243, 0.92);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .route-search-fade-enter-active,
+  .route-search-fade-leave-active {
+    transition: none;
+  }
 }
 
 .hero-copy {

@@ -27,7 +27,7 @@ function handleKeydown(event) {
 
 onMounted(() => {
   document.addEventListener('keydown', handleKeydown)
-  closeTimer = window.setTimeout(closeWelcome, 3000)
+  closeTimer = window.setTimeout(closeWelcome, 2000)
   nextTick(() => welcomeOverlay.value?.focus())
 })
 

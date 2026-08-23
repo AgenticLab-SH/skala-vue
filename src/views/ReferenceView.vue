@@ -63,7 +63,7 @@ const resources = [
   {
     name: 'Wellcome Animation · Muneeb Ullah',
     type: 'LottieFiles 애니메이션',
-    use: '사이트에 들어오거나 새로고침할 때 3초 동안 나타나는 환영 화면에 사용했습니다.',
+    use: '사이트에 들어오거나 새로고침할 때 2초 동안 나타나는 환영 화면에 사용했습니다.',
     href: 'https://lottiefiles.com/free-animation/wellcome-animation-9cXI8Bc0SU',
   },
 ]
