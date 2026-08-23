@@ -1397,23 +1397,15 @@ defineExpose({ playRouteReveal, showCountryOverview, showDestinationIn3d })
       }"
     >
       <div ref="mapContainer" class="map-canvas" role="region" :aria-label="mapAriaLabel"></div>
-      <div v-if="mapStatus === 'ready'" class="map-interaction-control">
+      <div v-if="mapStatus === 'ready' && isCoarsePointer" class="map-interaction-control">
         <button
-          v-if="isCoarsePointer"
           type="button"
           :aria-pressed="touchInteractionActive"
           @click="toggleTouchInteraction"
         >
           {{ touchInteractionActive ? '페이지 스크롤' : '지도 조작' }}
         </button>
-        <span v-else>드래그 이동 · Ctrl+휠 확대 · 나침반 회전</span>
-        <small v-if="isCoarsePointer">
-          {{
-            touchInteractionActive
-              ? '한 손 이동과 핀치 확대가 켜졌습니다.'
-              : '눌러서 터치 이동을 켭니다.'
-          }}
-        </small>
+        <small>한 손가락 이동 · 두 손가락 확대·축소 및 회전</small>
       </div>
       <details v-if="mapStatus === 'ready'" class="map-angle-control">
         <summary>
@@ -1948,6 +1940,10 @@ defineExpose({ playRouteReveal, showCountryOverview, showDestinationIn3d })
   cursor: grabbing;
 }
 
+.map-frame :deep(.maplibregl-cooperative-gesture-screen) {
+  display: none;
+}
+
 .map-frame.is-coarse-pointer:not(.is-touch-active) :deep(.maplibregl-canvas) {
   touch-action: pan-y !important;
 }
@@ -1972,7 +1968,8 @@ defineExpose({ playRouteReveal, showCountryOverview, showDestinationIn3d })
 }
 
 .map-interaction-control button {
-  min-height: 30px;
+  width: 100%;
+  min-height: 44px;
   padding: 0;
   border: 0;
   background: transparent;

@@ -5,7 +5,6 @@
 - [배포 화면](https://agenticlab-sh.github.io/skala-vue/#/)
 - [GitHub 저장소](https://github.com/AgenticLab-SH/skala-vue)
 - [구현 기록](https://agenticlab-sh.github.io/skala-vue/#/process)
-- [사용한 프롬프트](https://agenticlab-sh.github.io/skala-vue/#/prompts)
 - [수업 실습 기록](https://agenticlab-sh.github.io/skala-vue/#/challenges)
 - [활용자료](https://agenticlab-sh.github.io/skala-vue/#/reference)
 
@@ -47,6 +46,8 @@ PDF에서 `Code Challenge`로 표시된 13개 주제는 모두 실행 화면으�
 
 | PDF 범위와 수업 내용                   | 서비스와 실습에 적용한 곳                                                                                                                                                        | 주요 파일                                                                                    |
 | -------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| 7~24쪽 Modern JavaScript               | `const`, 화살표 함수, 템플릿 리터럴, 구조 분해·전개 문법, Promise와 `async`/`await`, 옵셔널 체이닝을 데이터 가공과 API 요청에 사용했습니다.                                       | `useTripPlanner.js`, `services/`, `data/`                                                    |
+| 25~56쪽 Getting Started with Vue.js    | Vite 프로젝트 구조, npm scripts, `main.js`의 `createApp`·Router·Pinia 등록·mount와 HMR 개발 흐름을 현재 프로젝트에 적용했습니다.                                                 | `package.json`, `src/main.js`, `App.vue`, `vite.config.js`                                   |
 | 72쪽 반응성·텍스트 보간                | 일반 변수와 `ref`의 차이를 비교했습니다. 서비스에서는 상태 문구와 수치를 `ref`로 관리해 값이 바뀌면 화면도 바로 갱신됩니다.                                                      | `SampleOne.vue`, `SampleTwo.vue`, `WeatherHomeView.vue`                                      |
 | 93쪽 Vue 디렉티브                      | `v-if`로 로딩·오류·빈 결과를 나눴습니다. 후보는 `v-for`로 반복하고 상태와 속성은 `v-bind`로 연결했습니다.                                                                        | `DirectivePractice.vue`, `WeatherHomeView.vue`, `CandidateCard.vue`                          |
 | 105쪽 이벤트                           | 클릭·제출·이벤트 객체·수식어를 실습했습니다. 추천 폼은 `@submit.prevent`로 처리하고 후보 카드는 선택 내용을 부모 컴포넌트에 전달합니다.                                          | `EventPractice.vue`, `PlannerForm.vue`, `CandidateCard.vue`                                  |
@@ -164,7 +165,7 @@ OSRM 요청이 실패하면 추천 과정 전체가 멈췄습니다. `requestDri
 
 ## AI를 활용해 구현한 뒤 배운 내용
 
-수업에서 배운 개념을 서비스 수준으로 확장하거나 지도와 태양 위치 계산처럼 처음 접하는 기술을 적용할 때 AI의 도움을 받았습니다. 아래 표에는 도움을 받은 범위뿐 아니라 직접 구현한 뒤 새롭게 이해한 점을 함께 적었습니다. 실제로 사용한 요청은 [사용한 프롬프트](https://agenticlab-sh.github.io/skala-vue/#/prompts)에 따로 정리했습니다.
+수업에서 배운 개념을 서비스 수준으로 확장하거나 지도와 태양 위치 계산처럼 처음 접하는 기술을 적용할 때 AI의 도움을 받았습니다. 아래 표에는 도움을 받은 범위뿐 아니라 직접 구현한 뒤 새롭게 이해한 점을 함께 적었습니다.
 
 ### 수업 개념에서 확장한 내용
 
@@ -227,3 +228,7 @@ npm run build:production
 ## 참고 사항
 
 예보와 이동 시간은 계획을 돕는 참고 정보입니다. 제주로 이동하거나 API 요청이 실패하면 추정 경로를 보여 줍니다. 그늘 우선 결과는 현재 지도에 불러온 도착지 주변 건물과 자동차 경로 대안을 비교한 값입니다. 보행 안전이나 전체 이동 구간의 그늘을 보장하지 않으므로 활동 장소의 운영 시간·예약·혼잡도는 출발 전에 따로 확인해야 합니다.
+
+## AI 활용 기록
+
+- [사용한 프롬프트 부록](https://agenticlab-sh.github.io/skala-vue/#/prompts)

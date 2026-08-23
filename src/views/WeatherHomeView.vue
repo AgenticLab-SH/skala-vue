@@ -69,7 +69,17 @@ const hasRecommendation = computed(() => Boolean(planner.selectedRecommendation.
 const selectedRouteKey = computed(() => {
   const recommendation = planner.selectedRecommendation.value
   if (!recommendation) return ''
-  return `${recommendation.city.id}-${new Date(recommendation.arrivalAt).getTime()}`
+
+  const destination = recommendation.routeDestination
+
+  return [
+    recommendation.city.id,
+    activityId.value,
+    destination?.id ?? destination?.name,
+    destination?.latitude,
+    destination?.longitude,
+    new Date(recommendation.arrivalAt).getTime(),
+  ].join('-')
 })
 const journeySteps = computed(() => [
   { id: 'conditions', number: '01', label: '출발 조건', available: true },
