@@ -2,13 +2,12 @@ import axios from 'axios'
 
 import { koreaWeatherGrid } from '../data/koreaWeatherGrid'
 
-const openWeatherApi = axios.create({ baseURL: 'https://api.openweathermap.org', timeout: 10000 })
 const openMeteoApi = axios.create({ baseURL: 'https://api.open-meteo.com', timeout: 10000 })
 const sunTimesApi = axios.create({ baseURL: 'https://api.sunrisesunset.io', timeout: 10000 })
 
-const apiKey = import.meta.env.VITE_OPENWEATHER_API_KEY
 const weatherCache = new Map()
 let weatherGridCache = null
+let openWeatherSnapshotPromise = null
 const CACHE_TIME = 10 * 60 * 1000
 
 const openMeteoConditions = {
@@ -53,60 +52,23 @@ export class LiveWeatherApiError extends Error {
   }
 }
 
-export function isOpenWeatherConfigured() {
-  return Boolean(apiKey)
-}
-
-function normalizeOpenWeatherCurrent(weather) {
-  return {
-    time: new Date(weather.dt * 1000).toISOString(),
-    temperature: weather.main.temp,
-    condition: weather.weather[0]?.description ?? '정보 없음',
-    humidity: weather.main.humidity,
-    windSpeed: weather.wind.speed,
-    precipitationProbability: null,
+async function requestOpenWeatherSnapshot() {
+  if (!openWeatherSnapshotPromise) {
+    const snapshotUrl = `${import.meta.env.BASE_URL}data/openweather.json`
+    openWeatherSnapshotPromise = axios
+      .get(snapshotUrl, { timeout: 10000 })
+      .then(({ data }) => {
+        if (data?.source !== 'OpenWeather' || !data.generatedAt || !data.cities) {
+          throw new LiveWeatherApiError('OPENWEATHER_SNAPSHOT_INVALID')
+        }
+        return data
+      })
+      .catch((error) => {
+        openWeatherSnapshotPromise = null
+        throw error
+      })
   }
-}
-
-function normalizeOpenWeatherForecast(item) {
-  return {
-    time: item.dt_txt.replace(' ', 'T') + '+00:00',
-    temperature: item.main.temp,
-    condition: item.weather[0]?.description ?? '정보 없음',
-    humidity: item.main.humidity,
-    windSpeed: item.wind.speed,
-    precipitationProbability: Math.round((item.pop ?? 0) * 100),
-  }
-}
-
-async function requestOpenWeatherBundle(city) {
-  const params = {
-    lat: city.latitude,
-    lon: city.longitude,
-    appid: apiKey,
-    units: 'metric',
-    lang: 'kr',
-  }
-  const [currentResponse, forecastResponse] = await Promise.all([
-    openWeatherApi.get('/data/2.5/weather', { params }),
-    openWeatherApi.get('/data/2.5/forecast', { params }),
-  ])
-
-  const forecast = forecastResponse.data.list.map(normalizeOpenWeatherForecast)
-  const current = normalizeOpenWeatherCurrent(currentResponse.data)
-  const nearestForecast = findNearestForecast({ forecast }, current.time)
-
-  return {
-    cityId: city.id,
-    cityName: city.name,
-    source: 'OpenWeather',
-    current: {
-      ...current,
-      // 현재 강수량 유무를 확률로 바꾸지 않고, 가장 가까운 예보의 pop 값을 사용합니다.
-      precipitationProbability: nearestForecast?.precipitationProbability ?? null,
-    },
-    forecast,
-  }
+  return openWeatherSnapshotPromise
 }
 
 async function requestOpenMeteoBundle(city) {
@@ -149,29 +111,34 @@ async function requestOpenMeteoBundle(city) {
 }
 
 export async function requestWeatherBundle(city, { force = false } = {}) {
-  const cacheKey = `${city.id}:${apiKey ? 'openweather' : 'open-meteo'}`
+  const cacheKey = city.id
   const cached = weatherCache.get(cacheKey)
   if (!force && cached && Date.now() - cached.savedAt < CACHE_TIME) {
     return { ...cached.value, cacheStatus: 'cached' }
   }
 
   try {
-    // 공개 배포에서는 키를 노출하지 않고 Open-Meteo를 사용합니다.
-    // 개인 키가 있는 로컬 환경에서는 수업에서 다룬 OpenWeather 현재·예보 API를 사용합니다.
-    const response = apiKey
-      ? await requestOpenWeatherBundle(city)
-      : await requestOpenMeteoBundle(city)
+    let response
+    let fetchedAt
+    try {
+      // 배포 단계에서 키로 만든 데이터만 읽어 브라우저 번들에는 키를 남기지 않습니다.
+      const snapshot = await requestOpenWeatherSnapshot()
+      response = snapshot.cities[city.id]
+      if (!response) throw new LiveWeatherApiError('OPENWEATHER_CITY_MISSING')
+      fetchedAt = snapshot.generatedAt
+    } catch {
+      // 스냅샷이 아직 없거나 갱신에 실패해도 추천 흐름은 계속 사용할 수 있게 둡니다.
+      response = await requestOpenMeteoBundle(city)
+      fetchedAt = new Date().toISOString()
+    }
     const value = {
       ...response,
-      fetchedAt: new Date().toISOString(),
+      fetchedAt,
       cacheStatus: 'fresh',
     }
     weatherCache.set(cacheKey, { savedAt: Date.now(), value })
     return value
-  } catch (error) {
-    if (axios.isAxiosError(error) && error.response?.status === 401) {
-      throw new LiveWeatherApiError('INVALID_API_KEY')
-    }
+  } catch {
     throw new LiveWeatherApiError('WEATHER_REQUEST_FAILED')
   }
 }
@@ -276,28 +243,21 @@ export function findNearestForecast(bundle, targetDate) {
 }
 
 export async function requestLiveWeather(cityName) {
-  if (!apiKey) throw new LiveWeatherApiError('MISSING_API_KEY')
   try {
-    const locationResponse = await openWeatherApi.get('/geo/1.0/direct', {
-      params: { q: `${cityName},KR`, limit: 1, appid: apiKey },
-    })
-    const location = locationResponse.data[0]
-    if (!location) throw new LiveWeatherApiError('LOCATION_NOT_FOUND')
-    const weatherResponse = await openWeatherApi.get('/data/2.5/weather', {
-      params: { lat: location.lat, lon: location.lon, appid: apiKey, units: 'metric', lang: 'kr' },
-    })
-    const weather = weatherResponse.data
+    const snapshot = await requestOpenWeatherSnapshot()
+    const bundle = Object.values(snapshot.cities).find(
+      (item) => item.cityName === cityName || item.cityId === cityName.toLowerCase(),
+    )
+    if (!bundle) throw new LiveWeatherApiError('LOCATION_NOT_FOUND')
+    const weather = bundle.current
     return {
-      cityName: weather.name,
-      temperature: weather.main.temp,
-      condition: weather.weather[0]?.description ?? '정보 없음',
-      humidity: weather.main.humidity,
+      cityName: bundle.cityName,
+      temperature: weather.temperature,
+      condition: weather.condition,
+      humidity: weather.humidity,
     }
   } catch (error) {
     if (error instanceof LiveWeatherApiError) throw error
-    if (axios.isAxiosError(error) && error.response?.status === 401) {
-      throw new LiveWeatherApiError('INVALID_API_KEY')
-    }
     throw new LiveWeatherApiError('WEATHER_REQUEST_FAILED')
   }
 }

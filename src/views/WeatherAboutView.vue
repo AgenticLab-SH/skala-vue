@@ -1,8 +1,4 @@
 <script setup>
-import { isOpenWeatherConfigured } from '../services/weatherApi'
-
-const openWeatherReady = isOpenWeatherConfigured()
-
 const lessons = [
   {
     pages: '126·144쪽',
@@ -102,10 +98,11 @@ const lessons = [
           </p>
         </article>
         <article>
-          <strong>API 키가 없었습니다.</strong>
+          <strong>API 키를 공개 화면에 넣을 수 없었습니다.</strong>
           <p>
-            공개 화면에 키를 넣는 대신 Open-Meteo로 전환했습니다. 로컬에 개인 키가 있으면 수업에서
-            사용한 OpenWeather 요청을 그대로 확인할 수 있습니다.
+            Vite 환경 변수는 빌드 결과에 포함될 수 있었습니다. 배포 작업에서만 OpenWeather 키를
+            사용해 18개 도시의 현재·5일 예보 파일을 만들고, 화면은 키가 빠진 결과만 읽도록
+            바꿨습니다. 파일이 없을 때는 Open-Meteo로 전환합니다.
           </p>
         </article>
         <article>
@@ -122,7 +119,7 @@ const lessons = [
         <article>
           <strong>그림자를 계산했지만 지도에서 알아보기 어려웠습니다.</strong>
           <p>
-            그늘 경로에서만 켜지던 그림자 계산을 목적지 3D 보기와 함께 쓰도록 묶었습니다. 그림자
+            그늘 경로에서만 켜지던 그림자 계산을 3D 그림자 보기와 함께 쓰도록 묶었습니다. 그림자
             면의 대비를 높이고 도착 시각 범례를 지도 안에 표시했습니다. 지도 종류와 날씨 필터도 한
             번에 모두 보이지 않게 나눴습니다.
           </p>
@@ -174,7 +171,7 @@ const lessons = [
       </div>
       <div class="runtime-status" role="status">
         <span>현재 실행 환경</span>
-        <strong>{{ openWeatherReady ? 'OpenWeather 연결' : 'Open-Meteo 공개 예보 사용' }}</strong>
+        <strong>OpenWeather 예보 · Open-Meteo 전국 지도</strong>
       </div>
     </section>
 

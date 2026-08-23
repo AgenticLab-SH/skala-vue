@@ -7,3 +7,4 @@ dist
 !.env.example
 !.env.staging
 !.env.production
+public/data/openweather.json

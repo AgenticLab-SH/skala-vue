@@ -1140,7 +1140,7 @@ onBeforeUnmount(() => {
         :aria-pressed="isThreeDimensional"
         @click="toggleView"
       >
-        {{ isThreeDimensional ? '전체 경로 보기' : '목적지 3D 보기' }}
+        {{ isThreeDimensional ? '전체 경로 보기' : '3D 그림자 보기' }}
       </button>
     </header>
 

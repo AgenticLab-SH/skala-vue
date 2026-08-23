@@ -46,6 +46,15 @@ const temperatureText = computed(() =>
     configStore.unitSymbol,
   ),
 )
+const weatherUpdatedAt = computed(() =>
+  new Intl.DateTimeFormat('ko-KR', {
+    month: 'numeric',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  }).format(new Date(props.recommendation.bundle.fetchedAt)),
+)
 const matchedSpots = computed(() =>
   getActivityMatchedSpots(
     props.recommendation.city,
@@ -106,7 +115,8 @@ const matchedSpots = computed(() =>
         </div>
       </dl>
       <p class="route-source">
-        {{ recommendation.route.source }} · {{ recommendation.route.distance }}km
+        {{ recommendation.route.source }} · {{ recommendation.route.distance }}km · 날씨
+        {{ recommendation.bundle.source }} {{ weatherUpdatedAt }} 갱신
       </p>
     </div>
   </article>
