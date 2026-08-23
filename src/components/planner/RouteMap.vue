@@ -2420,8 +2420,9 @@ onBeforeUnmount(() => {
     min-height: 430px;
   }
 
-  .route-strategy-panel {
+  .route-strategy-panel.has-result {
     grid-template-columns: 1fr;
+    align-items: start;
   }
 
   .shade-result {
