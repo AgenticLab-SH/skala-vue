@@ -1,11 +1,13 @@
 <script setup>
-import { ref } from 'vue'
+import { nextTick, onMounted, ref, watch } from 'vue'
+import { useRoute } from 'vue-router'
 
 import LifecyclePractice from '../components/component-practice/LifecyclePractice.vue'
 import PropsEmitsPractice from '../components/component-practice/PropsEmitsPractice.vue'
 import ProvideGrandParent from '../components/component-practice/ProvideGrandParent.vue'
 import SlotPractice from '../components/component-practice/SlotPractice.vue'
 import AxiosJsonPractice from '../components/practices/library/AxiosJsonPractice.vue'
+import AxiosWeatherPractice from '../components/practices/library/AxiosWeatherPractice.vue'
 import CodeQualityPractice from '../components/practices/library/CodeQualityPractice.vue'
 import ElementLibraryPractice from '../components/practices/library/ElementLibraryPractice.vue'
 import EnvironmentInfo from '../components/practices/library/EnvironmentInfo.vue'
@@ -29,10 +31,23 @@ import WeatherMockup from '../components/weather/WeatherMockup.vue'
 
 const showLifecycle = ref(true)
 const lifecycleMessage = ref('컴포넌트를 화면에 넣으면 mounted 상태가 표시됩니다.')
+const route = useRoute()
+const challengePages = [
+  72, 93, 105, 115, 126, 144, 155, 172, 177, 211, 229, 246, 247, 248, 270, 271, 272, 273,
+]
 
 function updateLifecycleMessage(event) {
   lifecycleMessage.value = event.message
 }
+
+async function focusChallenge(hash) {
+  if (!hash.startsWith('#challenge-')) return
+  await nextTick()
+  document.getElementById(hash.slice(1))?.focus({ preventScroll: true })
+}
+
+watch(() => route.hash, focusChallenge)
+onMounted(() => focusChallenge(route.hash))
 </script>
 
 <template>
@@ -44,22 +59,21 @@ function updateLifecycleMessage(event) {
     </header>
 
     <nav class="chapter-index" aria-label="코드 챌린지 목차">
-      <a href="#challenge-72">72쪽</a>
-      <a href="#challenge-93">93쪽</a>
-      <a href="#challenge-105">105쪽</a>
-      <a href="#challenge-115">115쪽</a>
-      <a href="#challenge-126">126쪽</a>
-      <a href="#challenge-144">144쪽</a>
-      <a href="#challenge-155">155쪽</a>
-      <a href="#challenge-172">172쪽</a>
-      <a href="#challenge-177">177쪽</a>
-      <a href="#challenge-211">211쪽</a>
-      <a href="#challenge-229">229쪽</a>
-      <a href="#challenge-246">246쪽</a>
-      <a href="#challenge-270">270쪽</a>
+      <RouterLink
+        v-for="page in challengePages"
+        :key="page"
+        :to="{ name: 'challenge-archive', hash: `#challenge-${page}` }"
+      >
+        {{ page }}쪽
+      </RouterLink>
     </nav>
 
-    <section id="challenge-72" class="challenge-section" aria-labelledby="challenge-72-title">
+    <section
+      id="challenge-72"
+      class="challenge-section"
+      tabindex="-1"
+      aria-labelledby="challenge-72-title"
+    >
       <header class="section-header">
         <p>72쪽 코드 챌린지</p>
         <h2 id="challenge-72-title">Vue 문법</h2>
@@ -67,7 +81,12 @@ function updateLifecycleMessage(event) {
       <div class="challenge-stack"><SampleOne /><SampleTwo /></div>
     </section>
 
-    <section id="challenge-93" class="challenge-section" aria-labelledby="challenge-93-title">
+    <section
+      id="challenge-93"
+      class="challenge-section"
+      tabindex="-1"
+      aria-labelledby="challenge-93-title"
+    >
       <header class="section-header">
         <p>93쪽 코드 챌린지</p>
         <h2 id="challenge-93-title">Vue 디렉티브</h2>
@@ -79,7 +98,12 @@ function updateLifecycleMessage(event) {
       </div>
     </section>
 
-    <section id="challenge-105" class="challenge-section" aria-labelledby="challenge-105-title">
+    <section
+      id="challenge-105"
+      class="challenge-section"
+      tabindex="-1"
+      aria-labelledby="challenge-105-title"
+    >
       <header class="section-header">
         <p>105쪽 코드 챌린지</p>
         <h2 id="challenge-105-title">Vue 이벤트 처리</h2>
@@ -87,7 +111,12 @@ function updateLifecycleMessage(event) {
       <EventPractice />
     </section>
 
-    <section id="challenge-115" class="challenge-section" aria-labelledby="challenge-115-title">
+    <section
+      id="challenge-115"
+      class="challenge-section"
+      tabindex="-1"
+      aria-labelledby="challenge-115-title"
+    >
       <header class="section-header">
         <p>115쪽 코드 챌린지</p>
         <h2 id="challenge-115-title">Vue 폼 처리와 스타일</h2>
@@ -103,7 +132,12 @@ function updateLifecycleMessage(event) {
       <WeatherMockup />
     </section>
 
-    <section id="challenge-126" class="challenge-section" aria-labelledby="challenge-126-title">
+    <section
+      id="challenge-126"
+      class="challenge-section"
+      tabindex="-1"
+      aria-labelledby="challenge-126-title"
+    >
       <header class="section-header">
         <p>126쪽 코드 챌린지</p>
         <h2 id="challenge-126-title">반응형 상태</h2>
@@ -111,7 +145,12 @@ function updateLifecycleMessage(event) {
       <ReactivePractice />
     </section>
 
-    <section id="challenge-144" class="challenge-section" aria-labelledby="challenge-144-title">
+    <section
+      id="challenge-144"
+      class="challenge-section"
+      tabindex="-1"
+      aria-labelledby="challenge-144-title"
+    >
       <header class="section-header">
         <p>144쪽 코드 챌린지</p>
         <h2 id="challenge-144-title">계산 속성과 감시자</h2>
@@ -127,7 +166,12 @@ function updateLifecycleMessage(event) {
       <WeatherComposition />
     </section>
 
-    <section id="challenge-155" class="challenge-section" aria-labelledby="challenge-155-title">
+    <section
+      id="challenge-155"
+      class="challenge-section"
+      tabindex="-1"
+      aria-labelledby="challenge-155-title"
+    >
       <header class="section-header">
         <p>155쪽 코드 챌린지</p>
         <h2 id="challenge-155-title">컴포넌트 라이프사이클</h2>
@@ -153,7 +197,12 @@ function updateLifecycleMessage(event) {
       <ProvideGrandParent />
     </section>
 
-    <section id="challenge-172" class="challenge-section" aria-labelledby="challenge-172-title">
+    <section
+      id="challenge-172"
+      class="challenge-section"
+      tabindex="-1"
+      aria-labelledby="challenge-172-title"
+    >
       <header class="section-header">
         <p>172쪽 코드 챌린지</p>
         <h2 id="challenge-172-title">Props &amp; Emits</h2>
@@ -161,7 +210,12 @@ function updateLifecycleMessage(event) {
       <PropsEmitsPractice />
     </section>
 
-    <section id="challenge-177" class="challenge-section" aria-labelledby="challenge-177-title">
+    <section
+      id="challenge-177"
+      class="challenge-section"
+      tabindex="-1"
+      aria-labelledby="challenge-177-title"
+    >
       <header class="section-header">
         <p>177쪽 코드 챌린지</p>
         <h2 id="challenge-177-title">컴포넌트 슬롯</h2>
@@ -169,7 +223,12 @@ function updateLifecycleMessage(event) {
       <SlotPractice />
     </section>
 
-    <section id="challenge-211" class="challenge-section" aria-labelledby="challenge-211-title">
+    <section
+      id="challenge-211"
+      class="challenge-section"
+      tabindex="-1"
+      aria-labelledby="challenge-211-title"
+    >
       <header class="section-header">
         <p>211쪽 코드 챌린지</p>
         <h2 id="challenge-211-title">Pinia Store</h2>
@@ -177,15 +236,20 @@ function updateLifecycleMessage(event) {
       <StoreCounter />
     </section>
 
-    <section id="challenge-229" class="challenge-section" aria-labelledby="challenge-229-title">
+    <section
+      id="challenge-229"
+      class="challenge-section"
+      tabindex="-1"
+      aria-labelledby="challenge-229-title"
+    >
       <header class="section-header">
         <p>229쪽 코드 챌린지</p>
         <h2 id="challenge-229-title">Axios 요청</h2>
       </header>
-      <AxiosJsonPractice />
+      <div class="challenge-stack"><AxiosWeatherPractice /><AxiosJsonPractice /></div>
     </section>
 
-    <section id="challenge-246" class="challenge-section" aria-labelledby="challenge-246-title">
+    <section class="challenge-section" aria-labelledby="challenge-246-title">
       <header class="section-header">
         <p>246~248쪽 코드 챌린지</p>
         <h2 id="challenge-246-title">Element Plus</h2>
@@ -193,7 +257,7 @@ function updateLifecycleMessage(event) {
       <ElementLibraryPractice />
     </section>
 
-    <section id="challenge-270" class="challenge-section" aria-labelledby="challenge-270-title">
+    <section class="challenge-section" aria-labelledby="challenge-270-title">
       <header class="section-header">
         <p>270~273쪽 코드 챌린지</p>
         <h2 id="challenge-270-title">코드 품질과 환경 변수</h2>
@@ -259,6 +323,11 @@ function updateLifecycleMessage(event) {
 .challenge-section,
 .practice-section {
   margin-top: 42px;
+  scroll-margin-top: 108px;
+}
+
+.challenge-section:focus {
+  outline: 0;
 }
 
 .section-header {

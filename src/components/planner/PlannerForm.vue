@@ -92,9 +92,9 @@ const emit = defineEmits([
 .planner-form {
   padding: 32px;
   border: 1px solid var(--line);
-  border-radius: 20px;
+  border-radius: var(--radius-panel);
   background: var(--surface);
-  box-shadow: 0 12px 34px rgba(25, 38, 52, 0.06);
+  box-shadow: var(--shadow-panel);
 }
 
 .form-heading {
@@ -140,7 +140,7 @@ input[type='datetime-local'] {
   height: 46px;
   padding: 0 12px;
   border: 1px solid var(--line-strong);
-  border-radius: 12px;
+  border-radius: var(--radius-control);
   background: #fff;
   color: var(--ink);
 }
@@ -163,7 +163,7 @@ fieldset {
   min-height: 64px;
   padding: 12px;
   border: 1px solid var(--line);
-  border-radius: 12px;
+  border-radius: var(--radius-control);
   align-items: center;
   gap: 10px;
   cursor: pointer;

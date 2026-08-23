@@ -8,6 +8,7 @@ import { getScoreLabel } from '../../utils/weatherScore'
 const props = defineProps({
   item: { type: Object, required: true },
   rank: { type: Number, required: true },
+  selected: { type: Boolean, default: false },
 })
 
 defineEmits(['select'])
@@ -23,8 +24,14 @@ const temperatureText = computed(() =>
 </script>
 
 <template>
-  <button class="candidate" type="button" @click="$emit('select', item)">
-    <span class="rank">0{{ rank }}</span>
+  <button
+    class="candidate"
+    :class="{ selected }"
+    type="button"
+    :aria-pressed="selected"
+    @click="$emit('select', item)"
+  >
+    <span class="rank">{{ String(rank).padStart(2, '0') }}</span>
     <span class="candidate-main">
       <span class="region">{{ item.city.region }}</span>
       <strong>{{ item.city.name }} · {{ item.activityPlace.name }}</strong>
@@ -84,6 +91,11 @@ const temperatureText = computed(() =>
 
 .candidate-side strong {
   font-size: 26px;
+}
+
+.candidate.selected {
+  background: var(--soft);
+  box-shadow: inset 3px 0 var(--accent);
 }
 
 @media (hover: hover) and (pointer: fine) {

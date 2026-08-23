@@ -58,40 +58,49 @@ onBeforeUnmount(() => {
 
 <template>
   <div class="library-grid">
-    <el-card shadow="never">
-      <template #header>가입 신청</template>
-      <el-form label-position="top">
-        <el-form-item label="이메일">
-          <el-input v-model="userForm.email" placeholder="name@example.com" />
-        </el-form-item>
-        <el-form-item>
-          <el-switch v-model="userForm.agree" active-text="이용약관 동의" />
-        </el-form-item>
-        <el-button type="primary" @click="handleRegister">가입 신청</el-button>
-      </el-form>
-    </el-card>
+    <section id="challenge-246" class="library-item" tabindex="-1" aria-label="246쪽 실습">
+      <p class="page-label">246쪽 · 폼 검증</p>
+      <el-card shadow="never">
+        <template #header>가입 신청</template>
+        <el-form label-position="top">
+          <el-form-item label="이메일">
+            <el-input v-model="userForm.email" placeholder="name@example.com" />
+          </el-form-item>
+          <el-form-item>
+            <el-switch v-model="userForm.agree" active-text="이용약관 동의" />
+          </el-form-item>
+          <el-button type="primary" @click="handleRegister">가입 신청</el-button>
+        </el-form>
+      </el-card>
+    </section>
 
-    <el-card shadow="never">
-      <template #header>수량과 평점</template>
-      <el-form label-position="top">
-        <el-form-item label="구매 수량">
-          <el-input-number v-model="productQuantity" :min="1" :max="10" />
-        </el-form-item>
-        <el-form-item label="평점">
-          <el-rate v-model="productRate" />
-        </el-form-item>
-      </el-form>
-      <p>수량 {{ productQuantity }}개 · 평점 {{ productRate }}점</p>
-    </el-card>
+    <section id="challenge-247" class="library-item" tabindex="-1" aria-label="247쪽 실습">
+      <p class="page-label">247쪽 · 수량과 평점</p>
+      <el-card shadow="never">
+        <template #header>수량과 평점</template>
+        <el-form label-position="top">
+          <el-form-item label="구매 수량">
+            <el-input-number v-model="productQuantity" :min="1" :max="10" />
+          </el-form-item>
+          <el-form-item label="평점">
+            <el-rate v-model="productRate" />
+          </el-form-item>
+        </el-form>
+        <p>수량 {{ productQuantity }}개 · 평점 {{ productRate }}점</p>
+      </el-card>
+    </section>
 
-    <el-card shadow="never">
-      <template #header>동기화와 삭제 확인</template>
-      <el-progress :percentage="downloadProgress" />
-      <div class="button-row">
-        <el-button :disabled="isDownloading" @click="startDownload">동기화 시작</el-button>
-        <el-button type="danger" plain @click="confirmDelete">삭제 확인</el-button>
-      </div>
-    </el-card>
+    <section id="challenge-248" class="library-item" tabindex="-1" aria-label="248쪽 실습">
+      <p class="page-label">248쪽 · 진행률과 확인창</p>
+      <el-card shadow="never">
+        <template #header>동기화와 삭제 확인</template>
+        <el-progress :percentage="downloadProgress" />
+        <div class="button-row">
+          <el-button :disabled="isDownloading" @click="startDownload">동기화 시작</el-button>
+          <el-button type="danger" plain @click="confirmDelete">삭제 확인</el-button>
+        </div>
+      </el-card>
+    </section>
   </div>
 </template>
 
@@ -102,7 +111,23 @@ onBeforeUnmount(() => {
   gap: 12px;
 }
 
-p {
+.library-item {
+  min-width: 0;
+  scroll-margin-top: 108px;
+}
+
+.library-item:focus {
+  outline: 0;
+}
+
+.page-label {
+  margin: 0 0 8px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.library-item :deep(.el-card) p {
   margin: 12px 0 0;
 }
 

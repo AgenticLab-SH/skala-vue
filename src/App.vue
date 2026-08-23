@@ -35,6 +35,7 @@ watch(
         <RouterLink to="/weather/search">도시 날씨</RouterLink>
         <RouterLink to="/process">구현 과정</RouterLink>
         <RouterLink to="/challenges">수업 실습 기록</RouterLink>
+        <RouterLink to="/reference">레퍼런스</RouterLink>
       </nav>
 
       <div class="header-controls" aria-label="화면 설정">

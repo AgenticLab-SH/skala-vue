@@ -188,7 +188,7 @@ onMounted(loadCities)
   margin-top: 48px;
   padding: 18px;
   border: 1px solid var(--line);
-  border-radius: 18px;
+  border-radius: var(--radius-panel);
   background: var(--surface);
 }
 .search-row label {
@@ -221,14 +221,14 @@ onMounted(loadCities)
   margin-top: 14px;
   padding: 0 14px;
   border: 1px solid var(--line-strong);
-  border-radius: 12px;
+  border-radius: var(--radius-control);
   background: var(--surface);
 }
 .city-list {
   overflow: hidden;
   margin-top: 22px;
   border: 1px solid var(--line);
-  border-radius: 18px;
+  border-radius: var(--radius-panel);
   background: var(--surface);
 }
 .city-row {
@@ -281,7 +281,7 @@ onMounted(loadCities)
   margin-top: 24px;
   padding: 32px;
   border: 1px solid var(--line);
-  border-radius: 16px;
+  border-radius: var(--radius-card);
   background: var(--surface);
   color: var(--muted);
 }

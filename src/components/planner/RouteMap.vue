@@ -1201,7 +1201,7 @@ onBeforeUnmount(() => {
   overflow: hidden;
   min-height: 500px;
   border: 1px solid var(--line);
-  border-radius: 20px;
+  border-radius: var(--radius-panel);
   background: var(--soft);
 }
 

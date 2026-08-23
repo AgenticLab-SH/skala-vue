@@ -39,11 +39,10 @@ export function estimateTravel(from, to) {
 
 export async function requestDrivingRoute(from, to) {
   if (from.id === to.id) {
+    const localEstimate = estimateTravel(from, to)
     return {
-      distance: 0,
-      minutes: 0,
-      source: '같은 지역',
-      geometry: [[from.longitude, from.latitude]],
+      ...localEstimate,
+      source: '도시 내부 이동 추정',
     }
   }
   if (from.transportMode === 'air' || to.transportMode === 'air') return estimateTravel(from, to)

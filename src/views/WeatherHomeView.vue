@@ -59,10 +59,10 @@ async function submitPlanner(focusResult = true) {
     departureAt: new Date(departureAt.value),
     maxTravelMinutes: maxTravelMinutes.value,
   })
-  if (planner.bestRecommendation.value && activeMapMode.value === 'route') {
+  if (planner.selectedRecommendation.value && activeMapMode.value === 'route') {
     configStore.setWeatherEffect(
-      planner.bestRecommendation.value.city.name,
-      planner.bestRecommendation.value.weather,
+      planner.selectedRecommendation.value.city.name,
+      planner.selectedRecommendation.value.weather,
     )
   }
   if (focusResult) {
@@ -86,13 +86,27 @@ async function loadWeatherGrid(force = false) {
 
 function handleMapModeChange(mode) {
   activeMapMode.value = mode
-  const recommendation = planner.bestRecommendation.value
+  const recommendation = planner.selectedRecommendation.value
   if (mode === 'route' && recommendation) {
     configStore.setWeatherEffect(recommendation.city.name, recommendation.weather)
   } else {
     // 여러 지역을 함께 볼 때는 한 도시의 화면 효과가 지도 의미를 가리지 않게 비웁니다.
     configStore.clearWeatherEffect()
   }
+}
+
+async function selectCandidate(item) {
+  planner.selectRecommendation(item.city.id)
+  if (activeMapMode.value === 'route') {
+    configStore.setWeatherEffect(item.city.name, item.weather)
+  }
+  await nextTick()
+  resultFeedback.value?.focus()
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  resultFeedback.value?.scrollIntoView({
+    block: 'start',
+    behavior: reduceMotion ? 'auto' : 'smooth',
+  })
 }
 
 function openDetail(item) {
@@ -167,7 +181,7 @@ onMounted(() => {
         <p>{{ planner.errorMessage.value }} 최대 이동 시간을 늘려 다시 비교해 보세요.</p>
       </div>
 
-      <template v-else-if="planner.bestRecommendation.value">
+      <template v-else-if="planner.selectedRecommendation.value">
         <div ref="resultFeedback" class="result-heading" tabindex="-1">
           <div>
             <h2>추천 결과</h2>
@@ -175,17 +189,17 @@ onMounted(() => {
         </div>
 
         <RecommendationHero
-          :recommendation="planner.bestRecommendation.value"
+          :recommendation="planner.selectedRecommendation.value"
           :origin-name="origin.name"
           :activity-id="activityId"
-          @open-detail="openDetail(planner.bestRecommendation.value)"
+          @open-detail="openDetail(planner.selectedRecommendation.value)"
         />
 
         <Suspense>
           <RouteMap
             :origin="origin"
-            :destination="planner.bestRecommendation.value.city"
-            :route="planner.bestRecommendation.value.route"
+            :destination="planner.selectedRecommendation.value.city"
+            :route="planner.selectedRecommendation.value.route"
             :weather-grid="weatherGrid"
             :weather-grid-status="weatherGridStatus"
             :weather-grid-error="weatherGridError"
@@ -197,23 +211,27 @@ onMounted(() => {
           </template>
         </Suspense>
 
-        <div v-if="planner.recommendations.value.length > 1" class="candidate-list">
+        <div v-if="planner.recommendations.value.length" class="candidate-list">
           <div class="candidate-heading">
-            <h3>다른 선택지</h3>
-            <span>도착 날씨, 활동 장소와 이동 시간을 함께 비교했습니다.</span>
+            <h3>이동 시간 안의 전체 후보</h3>
+            <span
+              >{{ planner.recommendations.value.length }}곳 중 원하는 장소를 선택할 수
+              있습니다.</span
+            >
           </div>
           <CandidateCard
-            v-for="(item, index) in planner.recommendations.value.slice(1)"
+            v-for="(item, index) in planner.recommendations.value"
             :key="item.city.id"
             :item="item"
-            :rank="index + 2"
-            @select="openDetail"
+            :rank="index + 1"
+            :selected="item.city.id === planner.selectedRecommendation.value.city.id"
+            @select="selectCandidate"
           />
         </div>
 
         <DepartureComparison :alternatives="planner.timeAlternatives.value" />
 
-        <section v-if="planner.bestRecommendation.value.score < 55" class="plan-b">
+        <section v-if="planner.selectedRecommendation.value.score < 55" class="plan-b">
           <div>
             <h2>이동보다 계획을 바꾸는 편이 낫습니다.</h2>
             <span>{{ activity.planB }}</span>
@@ -297,7 +315,7 @@ onMounted(() => {
 .error-panel {
   padding: 34px;
   border: 1px solid var(--line);
-  border-radius: 18px;
+  border-radius: var(--radius-panel);
   background: var(--surface);
 }
 
@@ -343,7 +361,7 @@ onMounted(() => {
   margin-top: 32px;
   padding: 26px;
   border: 1px solid var(--line);
-  border-radius: 16px;
+  border-radius: var(--radius-card);
   background: var(--surface);
 }
 

@@ -118,9 +118,9 @@ const matchedSpots = computed(() =>
   display: grid;
   grid-template-columns: minmax(0, 1.5fr) minmax(280px, 0.75fr);
   border: 1px solid var(--line-strong);
-  border-radius: 20px;
+  border-radius: var(--radius-panel);
   background: var(--surface);
-  box-shadow: 0 14px 36px rgba(25, 38, 52, 0.07);
+  box-shadow: var(--shadow-panel);
 }
 
 .recommendation-copy,

@@ -39,8 +39,47 @@ export function useTripPlanner() {
   const recommendations = ref([])
   const timeAlternatives = ref([])
   const failedCityCount = ref(0)
+  const selectedCityId = ref('')
+  let latestInput = null
 
   const bestRecommendation = computed(() => recommendations.value[0] ?? null)
+  const selectedRecommendation = computed(
+    () =>
+      recommendations.value.find((item) => item.city.id === selectedCityId.value) ??
+      bestRecommendation.value,
+  )
+
+  function updateTimeAlternatives(recommendation) {
+    if (!recommendation || !latestInput) {
+      timeAlternatives.value = []
+      return
+    }
+    timeAlternatives.value = [0, 180, 360].map((delay) => {
+      const changedDeparture = addMinutes(latestInput.departureAt, delay)
+      const changed = buildRecommendation(
+        recommendation.city,
+        recommendation.route,
+        recommendation.bundle,
+        changedDeparture,
+        latestInput.activityId,
+        latestInput.maxTravelMinutes,
+      )
+      return {
+        delay,
+        departureAt: changedDeparture,
+        arrivalAt: changed.arrivalAt,
+        weather: changed.weather,
+        score: changed.score,
+      }
+    })
+  }
+
+  function selectRecommendation(cityId) {
+    const recommendation = recommendations.value.find((item) => item.city.id === cityId)
+    if (!recommendation) return
+    selectedCityId.value = cityId
+    updateTimeAlternatives(recommendation)
+  }
 
   async function runPlanner({ originId, activityId, departureAt, maxTravelMinutes }) {
     const runId = ++activeRunId
@@ -52,9 +91,11 @@ export function useTripPlanner() {
     recommendations.value = []
     timeAlternatives.value = []
     failedCityCount.value = 0
+    selectedCityId.value = ''
+    latestInput = { activityId, departureAt, maxTravelMinutes }
 
     const candidates = weatherCities
-      .filter((city) => city.id !== origin.id && supportsActivity(city, activityId))
+      .filter((city) => supportsActivity(city, activityId))
       .map((city) => ({ city, route: estimateTravel(origin, city) }))
       .filter(({ route }) => route.minutes <= maxTravelMinutes * 1.15)
 
@@ -99,7 +140,6 @@ export function useTripPlanner() {
       )
       .filter((item) => item.route.minutes <= maxTravelMinutes)
       .sort((a, b) => b.score - a.score)
-      .slice(0, 4)
 
     const best = recommendations.value[0]
     if (!best) {
@@ -109,24 +149,7 @@ export function useTripPlanner() {
       return
     }
 
-    timeAlternatives.value = [0, 180, 360].map((delay) => {
-      const changedDeparture = addMinutes(departureAt, delay)
-      const changed = buildRecommendation(
-        best.city,
-        best.route,
-        best.bundle,
-        changedDeparture,
-        activityId,
-        maxTravelMinutes,
-      )
-      return {
-        delay,
-        departureAt: changedDeparture,
-        arrivalAt: changed.arrivalAt,
-        weather: changed.weather,
-        score: changed.score,
-      }
-    })
+    selectRecommendation(best.city.id)
 
     status.value = 'success'
   }
@@ -138,6 +161,8 @@ export function useTripPlanner() {
     timeAlternatives,
     failedCityCount,
     bestRecommendation,
+    selectedRecommendation,
+    selectRecommendation,
     runPlanner,
   }
 }

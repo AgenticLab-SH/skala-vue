@@ -21,7 +21,11 @@ Apple의 Liquid Glass 원칙처럼 유리 재질은 콘텐츠 카드가 아니�
 - `--surface #ffffff`: 읽는 콘텐츠
 - `--soft #f2f5f8`: 구분 배경
 - `--glass rgba(255,255,255,.72)`: 탐색·지도 조작 재질
-- 최대 본문 폭 `1180px`, 본문 radius `18px`, 기능 유리 radius `999px`
+- `--radius-control 12px`: 입력과 일반 조작
+- `--radius-card 16px`: 일반 정보 카드
+- `--radius-panel 18px`: 대표 추천과 지도 프레임
+- `--shadow-panel`: 대표 작업 영역에만 쓰는 낮은 그림자
+- 최대 작업 폭 `1180px`, 구현 과정 읽기 폭 `820px`, 기능 유리 radius `999px`
 - 주요 간격 `8, 12, 16, 24, 32, 48, 64px`
 - 상호작용 `140ms ease`, 화면 상태 `220ms ease-out`
 

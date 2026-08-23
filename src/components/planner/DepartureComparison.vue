@@ -66,7 +66,7 @@ function temperatureText(value) {
 .departure-comparison {
   padding: 32px;
   border: 1px solid var(--line);
-  border-radius: 18px;
+  border-radius: var(--radius-panel);
   background: var(--surface);
 }
 
@@ -95,7 +95,7 @@ article {
   position: relative;
   padding: 20px;
   border: 1px solid var(--line);
-  border-radius: 12px;
+  border-radius: var(--radius-control);
 }
 
 article.best {

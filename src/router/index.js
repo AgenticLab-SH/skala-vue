@@ -5,6 +5,14 @@ import { weatherCities } from '../data/weatherCities'
 const router = createRouter({
   // 정적 GitHub Pages에서도 새로고침 시 경로가 유지되도록 hash history를 사용합니다.
   history: createWebHashHistory(import.meta.env.BASE_URL),
+  scrollBehavior(to, _from, savedPosition) {
+    if (savedPosition) return savedPosition
+    if (to.hash) {
+      const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+      return { el: to.hash, top: 108, behavior: reduceMotion ? 'auto' : 'smooth' }
+    }
+    return { top: 0 }
+  },
   routes: [
     {
       path: '/',
@@ -32,6 +40,11 @@ const router = createRouter({
       component: () => import('../views/WeatherAboutView.vue'),
     },
     {
+      path: '/reference',
+      name: 'weather-reference',
+      component: () => import('../views/ReferenceView.vue'),
+    },
+    {
       path: '/about',
       redirect: '/process',
     },
@@ -51,10 +64,6 @@ router.beforeEach((to, _from, next) => {
   }
 
   next()
-})
-
-router.afterEach(() => {
-  window.scrollTo({ top: 0, behavior: 'auto' })
 })
 
 export default router

@@ -177,6 +177,9 @@ const lessons = [
 
 <style scoped>
 .process-view {
+  width: 100%;
+  max-width: 820px;
+  margin: 0 auto;
   padding-top: 58px;
 }
 
@@ -290,7 +293,7 @@ const lessons = [
   grid-template-columns: 0.75fr 1.25fr;
   gap: 50px;
   padding: 34px;
-  border-radius: 18px;
+  border-radius: var(--radius-panel);
   background: var(--ink);
   color: #fff;
 }
@@ -338,7 +341,7 @@ const lessons = [
   margin-top: 16px;
   padding: 18px 20px;
   border: 1px solid var(--line);
-  border-radius: 14px;
+  border-radius: var(--radius-control);
   background: var(--surface);
 }
 

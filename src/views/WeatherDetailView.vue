@@ -184,7 +184,7 @@ onMounted(loadDetail)
   margin-top: 30px;
   padding: 32px;
   border: 1px solid var(--line);
-  border-radius: 16px;
+  border-radius: var(--radius-card);
   background: var(--surface);
 }
 .state-panel button {
@@ -247,7 +247,7 @@ onMounted(loadDetail)
   grid-template-columns: repeat(4, 1fr);
   margin-top: 18px;
   border: 1px solid var(--line);
-  border-radius: 16px;
+  border-radius: var(--radius-card);
   background: var(--surface);
 }
 .metric-grid article {
@@ -289,7 +289,7 @@ onMounted(loadDetail)
   grid-template-columns: repeat(8, minmax(115px, 1fr));
   overflow-x: auto;
   border: 1px solid var(--line);
-  border-radius: 16px;
+  border-radius: var(--radius-card);
   background: var(--surface);
 }
 .forecast-list article {
@@ -321,7 +321,7 @@ onMounted(loadDetail)
   margin-top: 54px;
   padding: 28px;
   border: 1px solid var(--line);
-  border-radius: 16px;
+  border-radius: var(--radius-card);
   background: var(--surface);
 }
 .local-note p,
