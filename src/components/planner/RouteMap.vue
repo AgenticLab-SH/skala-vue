@@ -217,6 +217,10 @@ const weatherUpdatedAt = computed(() => {
   }).format(new Date(time))
 })
 
+const weatherSourceDescription = computed(
+  () => 'OpenWeather 기준 도시의 현재값을 가까운 표시 지점에 연결했습니다.',
+)
+
 const arrivalTimeLabel = computed(() =>
   new Intl.DateTimeFormat('ko-KR', {
     month: 'numeric',
@@ -1402,8 +1406,8 @@ onBeforeUnmount(() => {
           </span>
         </template>
         <template v-else>
-          Open-Meteo 현재 모델값을 {{ weatherGrid.length }}개 세부 지점에 표시하며 기상 레이더
-          경계는 아닙니다.
+          {{ weatherSourceDescription }} {{ weatherGrid.length }}개 지점은 기상 레이더 경계가
+          아닙니다.
           {{ weatherUpdatedAt ? `${weatherUpdatedAt} 기준` : '' }}
         </template>
       </p>

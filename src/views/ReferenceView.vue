@@ -3,14 +3,8 @@ const resources = [
   {
     name: 'OpenWeather',
     type: '날씨 API',
-    use: '18개 도시의 현재 날씨와 5일 예보를 배포 단계에서 받아 도착 시각과 가까운 예보를 찾았습니다.',
+    use: '18개 도시의 현재 날씨와 5일 예보를 배포 단계에서 받아 도착 시각과 가까운 예보를 찾고, 전국 지도 표시 지점의 기준값으로 사용했습니다.',
     href: 'https://openweathermap.org/api',
-  },
-  {
-    name: 'Open-Meteo',
-    type: '기상 데이터',
-    use: '전국 144개 기상 지점의 강수량과 운량을 비교하고, OpenWeather 예보 파일이 없을 때 대체값으로 사용했습니다.',
-    href: 'https://open-meteo.com/en/docs',
   },
   {
     name: 'OSRM',
@@ -89,7 +83,7 @@ const resources = [
         </div>
         <div>
           <dt>전국 기상 지도</dt>
-          <dd>Open-Meteo 144개 지점</dd>
+          <dd>OpenWeather 기준값 · 144개 표시 지점</dd>
         </div>
         <div>
           <dt>이동 경로</dt>

@@ -30,8 +30,12 @@ function normalizeCurrent(data, nearestForecast) {
     time: new Date(data.dt * 1000).toISOString(),
     temperature: data.main.temp,
     condition: normalizeWeatherCondition(data.weather[0]?.description),
+    weatherCode: data.weather[0]?.id ?? null,
     humidity: data.main.humidity,
     windSpeed: data.wind.speed,
+    rainAmount: data.rain?.['1h'] ?? 0,
+    snowfall: data.snow?.['1h'] ?? 0,
+    cloudCover: data.clouds?.all ?? 0,
     precipitationProbability: nearestForecast?.precipitationProbability ?? null,
   }
 }
