@@ -14,6 +14,7 @@ import CandidateCard from '../components/planner/CandidateCard.vue'
 import DepartureComparison from '../components/planner/DepartureComparison.vue'
 import PlannerForm from '../components/planner/PlannerForm.vue'
 import RecommendationHero from '../components/planner/RecommendationHero.vue'
+import ShareSafeReview from '../components/planner/ShareSafeReview.vue'
 import SearchLoadingState from '../components/motion/SearchLoadingState.vue'
 import { useTripPlanner } from '../composables/useTripPlanner'
 import { findActivity } from '../data/activities'
@@ -398,6 +399,11 @@ onBeforeUnmount(() => {
             </div>
           </aside>
         </div>
+        <ShareSafeReview
+          :key="selectedRouteKey"
+          :recommendation="planner.selectedRecommendation.value"
+          :activity-label="activity.label"
+        />
         <button class="section-continue" type="button" @click="scrollToJourneyStep('route')">
           이동 경로 보기 <span aria-hidden="true">↓</span>
         </button>
